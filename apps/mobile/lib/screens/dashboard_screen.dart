@@ -9,7 +9,6 @@ import '../utils/recent_pr.dart';
 import '../utils/streak.dart';
 import '../utils/text.dart';
 import '../models/rank.dart';
-import '../widgets/rank_card.dart';
 import '../widgets/training_actions.dart';
 import '../widgets/week_preview.dart';
 import 'weekly_plan_edit_screen.dart';
@@ -338,6 +337,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        // Streak + rank live top-left in the header, freeing the greeting
+        // below to be just the personal headline.
+        leadingWidth: 150,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _streakChip(),
+              const SizedBox(width: 6),
+              _rankChip(context),
+            ],
+          ),
+        ),
         title: const Text('HEFTOR'),
         actions: [
           Builder(
@@ -411,86 +424,102 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _header(BuildContext context) {
     final headline = _personalHeadline();
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    // Streak + rank now live in the app bar (top-left); the body header is
+    // just the greeting.
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(t('dashboard.hi'),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(color: AppColors.muted)),
-              Text(widget.auth.user?.displayName ?? 'Alex',
-                  style: Theme.of(context).textTheme.headlineLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
-              if (headline != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  headline,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.muted,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'STREAK',
-                style: TextStyle(
-                  fontSize: 10,
-                  letterSpacing: 1.6,
-                  color: AppColors.muted,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$_streak',
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.onSurface,
-                  height: 1,
-                  letterSpacing: -1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Rank chip → tap takes the user to the Account screen where the
-        // RankCard + weekly breakdown lives.
-        RankChip(
-          rank: rankForTier(widget.auth.user?.rank ?? 1),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => AccountScreen(
-                auth: widget.auth,
-                onLoggedOut: widget.onLogout,
-              ),
+        Text(t('dashboard.hi'),
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge
+                ?.copyWith(color: AppColors.muted)),
+        Text(widget.auth.user?.displayName ?? 'Alex',
+            style: Theme.of(context).textTheme.headlineLarge,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
+        if (headline != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            headline,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.muted,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
             ),
           ),
-        ),
+        ],
       ],
+    );
+  }
+
+  /// Compact streak pill for the app-bar header (flame + day count).
+  Widget _streakChip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.local_fire_department,
+              size: 15, color: AppColors.accentAmber),
+          const SizedBox(width: 3),
+          Text(
+            '$_streak',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: AppColors.onSurface,
+              height: 1,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Compact rank pill for the app-bar header → taps through to Account.
+  Widget _rankChip(BuildContext context) {
+    final rank = rankForTier(widget.auth.user?.rank ?? 1);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AccountScreen(
+            auth: widget.auth,
+            onLoggedOut: widget.onLogout,
+          ),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLow,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.military_tech, size: 15, color: AppColors.muted),
+            const SizedBox(width: 3),
+            Text(
+              rank.numeral,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColors.onSurface,
+                height: 1,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
