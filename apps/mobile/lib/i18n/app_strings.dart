@@ -682,6 +682,71 @@ class AppStrings extends ChangeNotifier {
 
     // ----- Progress -----
     'progress.title': {'en': 'Progress', 'hu': 'Fejlődés'},
+    'progress.tab_history': {'en': 'History', 'hu': 'Előzmények'},
+    'progress.tab_exercises': {'en': 'Exercises', 'hu': 'Gyakorlatok'},
+    'progress.subtitle': {
+      'en': '{n} WORKOUTS · {vol} LIFTED',
+      'hu': '{n} EDZÉS · {vol} MEGEMELT',
+    },
+    // History range filter pills.
+    'progress.range_all': {'en': 'ALL', 'hu': 'MIND'},
+    'progress.range_week': {'en': 'WEEK', 'hu': 'HÉT'},
+    'progress.range_month': {'en': 'MONTH', 'hu': 'HÓNAP'},
+    'progress.range_90': {'en': '90 DAYS', 'hu': '90 NAP'},
+    'progress.range_year': {'en': 'YEAR', 'hu': 'ÉV'},
+    // Relative date buckets in the history list.
+    'progress.bucket_today': {'en': 'TODAY', 'hu': 'MA'},
+    'progress.bucket_yesterday': {'en': 'YESTERDAY', 'hu': 'TEGNAP'},
+    'progress.bucket_this_week': {'en': 'THIS WEEK', 'hu': 'EZEN A HÉTEN'},
+    'progress.bucket_this_month': {'en': 'THIS MONTH', 'hu': 'EZ A HÓNAP'},
+    'progress.bucket_earlier': {'en': 'EARLIER', 'hu': 'KORÁBBAN'},
+    // Stat hero labels.
+    'progress.stat_workouts': {'en': 'WORKOUTS', 'hu': 'EDZÉS'},
+    'progress.stat_lifted': {'en': 'LIFTED', 'hu': 'MEGEMELT'},
+    'progress.stat_active_time': {'en': 'ACTIVE TIME', 'hu': 'AKTÍV IDŐ'},
+    // Empty / message states.
+    'progress.empty_history_title': {
+      'en': 'No finished workouts yet',
+      'hu': 'Még nincs befejezett edzésed',
+    },
+    'progress.empty_history_subtitle': {
+      'en':
+          'Start a workout from the dashboard — every session shows up here, grouped by date.',
+      'hu':
+          'Indíts egy edzést a dashboardról — innen majd minden session megjelenik dátum szerint csoportosítva.',
+    },
+    'progress.empty_exercises_title': {
+      'en': 'No data yet',
+      'hu': 'Még nincs adat',
+    },
+    'progress.empty_exercises_subtitle': {
+      'en': 'Log workouts to see your progress.',
+      'hu': 'Naplózz edzéseket, hogy lásd a fejlődésed.',
+    },
+    // Row subtitles / counts.
+    'progress.n_exercises': {'en': '{n} exercises', 'hu': '{n} gyakorlat'},
+    'progress.n_sessions': {'en': '{n} sessions', 'hu': '{n} alkalom'},
+    // Per-exercise chart.
+    'progress.chart_need_two': {
+      'en': 'At least 2 sessions are needed for the chart',
+      'hu': 'Legalább 2 alkalom kell a grafikonhoz',
+    },
+    'progress.metric_1rm': {'en': '1RM', 'hu': '1RM'},
+    'progress.metric_max_weight': {'en': 'Max Weight', 'hu': 'Max súly'},
+    'progress.metric_volume': {'en': 'Volume', 'hu': 'Volumen'},
+    'progress.metric_total_reps': {'en': 'Total Reps', 'hu': 'Össz. ism.'},
+    // Session detail.
+    'progress.detail_done': {'en': 'Done', 'hu': 'Kész'},
+    'progress.detail_time': {'en': 'Time', 'hu': 'Idő'},
+    'progress.detail_sets_value': {
+      'en': '{done}/{total} sets',
+      'hu': '{done}/{total} szett',
+    },
+    'progress.detail_started': {'en': 'Started: {time}', 'hu': 'Kezdés: {time}'},
+    'progress.detail_finished': {
+      'en': 'Finished: {time}',
+      'hu': 'Befejezés: {time}',
+    },
 
     // ----- Workout screen -----
     'workout.finish': {'en': 'Finish', 'hu': 'Befejezés'},

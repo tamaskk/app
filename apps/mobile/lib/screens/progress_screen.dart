@@ -5,36 +5,37 @@ import '../services/api.dart';
 import '../models/api_models.dart';
 import '../utils/recent_pr.dart';
 import '../utils/text.dart';
-
-const _months = [
-  'JAN', 'FEB', 'MÁR', 'ÁPR', 'MÁJ', 'JÚN',
-  'JÚL', 'AUG', 'SZE', 'OKT', 'NOV', 'DEC',
-];
+import '../i18n/app_strings.dart';
 
 String _fmtTime(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
-/// Uppercase brutalist date used in session subtitle: `JÚN 5 · 19:38`.
+/// Uppercase brutalist date used in session subtitle: `JUN 5 · 19:38`.
+/// Month abbreviation is localized via the shared `month.N` keys.
 String _fmtDateTime(DateTime d) =>
-    '${_months[d.month - 1]} ${d.day} · ${_fmtTime(d)}';
+    '${t('month.${d.month}')} ${d.day} · ${_fmtTime(d)}';
 
 String _fmtDuration(Duration dur) {
+  final hu = AppStrings.instance.isHu;
   final m = dur.inMinutes;
-  if (m < 1) return '${dur.inSeconds} mp';
-  if (m < 60) return '$m perc';
+  if (m < 1) return hu ? '${dur.inSeconds} mp' : '${dur.inSeconds}s';
+  if (m < 60) return hu ? '$m perc' : '$m min';
   final h = m ~/ 60;
   final rem = m % 60;
-  return rem == 0 ? '$h óra' : '$hó ${rem}p';
+  if (rem == 0) return hu ? '$h óra' : '${h}h';
+  return hu ? '$hó ${rem}p' : '${h}h ${rem}m';
 }
 
 /// Trim a double for display: 139 not 139.0, 7.5 stays 7.5.
 String _num(double v) =>
     v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
 
-/// Compact volume for the brutalist UI: 12,4 t over 1 ton, kg below.
+/// Compact volume for the brutalist UI: 12.4 t over 1 ton, kg below.
+/// Decimal separator follows the language (comma for HU, dot for EN).
 String _fmtVolume(double kg) {
   if (kg >= 1000) {
-    return '${(kg / 1000).toStringAsFixed(1).replaceAll('.', ',')} t';
+    final s = (kg / 1000).toStringAsFixed(1);
+    return '${AppStrings.instance.isHu ? s.replaceAll('.', ',') : s} t';
   }
   return '${kg.round()} kg';
 }
@@ -45,10 +46,12 @@ double _sessionVolume(WorkoutSession s) => s.exercises.fold<double>(
 
 /// Compact wall-clock-style minutes label for stat hero (8h 12m / 47p).
 String _fmtMinutesH(int minutes) {
-  if (minutes < 60) return '${minutes}p';
+  final hu = AppStrings.instance.isHu;
+  if (minutes < 60) return hu ? '${minutes}p' : '${minutes}m';
   final h = minutes ~/ 60;
   final rem = minutes % 60;
-  return rem == 0 ? '${h}h' : '${h}h ${rem}p';
+  if (rem == 0) return '${h}h';
+  return hu ? '${h}h ${rem}p' : '${h}h ${rem}m';
 }
 
 /// History filter windows. `null` means "all time".
@@ -56,11 +59,11 @@ enum _RangeFilter { mind, het, honap, kilencven, ev }
 
 extension _RangeFilterX on _RangeFilter {
   String get label => switch (this) {
-        _RangeFilter.mind => 'MIND',
-        _RangeFilter.het => 'HÉT',
-        _RangeFilter.honap => 'HÓNAP',
-        _RangeFilter.kilencven => '90 NAP',
-        _RangeFilter.ev => 'ÉV',
+        _RangeFilter.mind => t('progress.range_all'),
+        _RangeFilter.het => t('progress.range_week'),
+        _RangeFilter.honap => t('progress.range_month'),
+        _RangeFilter.kilencven => t('progress.range_90'),
+        _RangeFilter.ev => t('progress.range_year'),
       };
 
   Duration? get window => switch (this) {
@@ -77,13 +80,15 @@ String _dateBucket(DateTime d, DateTime now) {
   final today = DateTime(now.year, now.month, now.day);
   final that = DateTime(d.year, d.month, d.day);
   final diffDays = today.difference(that).inDays;
-  if (diffDays <= 0) return 'MA';
-  if (diffDays == 1) return 'TEGNAP';
-  // Same ISO week as today (Monday-first) → "EZEN A HÉTEN".
+  if (diffDays <= 0) return t('progress.bucket_today');
+  if (diffDays == 1) return t('progress.bucket_yesterday');
+  // Same ISO week as today (Monday-first) → "THIS WEEK".
   final mondayThisWeek = today.subtract(Duration(days: today.weekday - 1));
-  if (!that.isBefore(mondayThisWeek)) return 'EZEN A HÉTEN';
-  if (d.year == now.year && d.month == now.month) return 'EZ A HÓNAP';
-  return 'KORÁBBAN';
+  if (!that.isBefore(mondayThisWeek)) return t('progress.bucket_this_week');
+  if (d.year == now.year && d.month == now.month) {
+    return t('progress.bucket_this_month');
+  }
+  return t('progress.bucket_earlier');
 }
 
 // --- per-exercise history aggregation ---------------------------------------
@@ -204,6 +209,15 @@ double _metricValue(String metric, List<SavedSet> sets) {
 
 String _metricUnit(String metric) => metric == 'Total Reps' ? '' : 'kg';
 
+/// Localized display label for a metric. The internal metric strings stay in
+/// English so the calculation switches keep working.
+String _metricLabel(String metric) => switch (metric) {
+      'Max Weight' => t('progress.metric_max_weight'),
+      'Volume' => t('progress.metric_volume'),
+      'Total Reps' => t('progress.metric_total_reps'),
+      _ => t('progress.metric_1rm'),
+    };
+
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
 
@@ -265,7 +279,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Nem sikerült elérni a szervert.');
+      if (mounted) setState(() => _error = t('auth.server_unreachable'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -322,15 +336,18 @@ class _ProgressScreenState extends State<ProgressScreen> {
         _sessions.fold<double>(0, (a, s) => a + _sessionVolume(s));
     final subtitle = _sessions.isEmpty
         ? null
-        : '${_sessions.length} EDZÉS · ${_fmtVolume(totalVolume).toUpperCase()} MEGEMELT';
+        : tFmt('progress.subtitle', {
+            'n': _sessions.length,
+            'vol': _fmtVolume(totalVolume).toUpperCase(),
+          });
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'FEJLŐDÉS',
-            style: TextStyle(
+          Text(
+            t('progress.title').toUpperCase(),
+            style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w800,
               letterSpacing: -1,
@@ -388,7 +405,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-      child: Row(children: [tab(0, 'Előzmények'), tab(1, 'Gyakorlatok')]),
+      child: Row(children: [
+        tab(0, t('progress.tab_history')),
+        tab(1, t('progress.tab_exercises')),
+      ]),
     );
   }
 
@@ -410,16 +430,15 @@ class _ProgressScreenState extends State<ProgressScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null && _sessions.isEmpty) {
-      return _message(Icons.cloud_off, _error!, 'Újra', _load);
+      return _message(Icons.cloud_off, _error!, t('common.retry'), _load);
     }
     if (_sessions.isEmpty) {
       return _message(
         Icons.history,
-        'Még nincs befejezett edzésed',
+        t('progress.empty_history_title'),
         null,
         null,
-        subtitle:
-            'Indíts egy edzést a dashboardról — innen majd minden session megjelenik dátum szerint csoportosítva.',
+        subtitle: t('progress.empty_history_subtitle'),
       );
     }
     final filtered = _filteredSessions();
@@ -508,9 +527,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ),
         child: Row(
           children: [
-            _heroStat('${s.count}', 'EDZÉS'),
-            _heroStat(_fmtVolume(s.volume), 'MEGEMELT', compact: true),
-            _heroStat(_fmtMinutesH(s.minutes), 'AKTÍV IDŐ'),
+            _heroStat('${s.count}', t('progress.stat_workouts')),
+            _heroStat(_fmtVolume(s.volume), t('progress.stat_lifted'),
+                compact: true),
+            _heroStat(_fmtMinutesH(s.minutes), t('progress.stat_active_time')),
             _heroStat('${s.prs}', 'PR'),
           ],
         ),
@@ -591,7 +611,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     children: [
                       Flexible(
                         child: Text(
-                          titleCase(s.name.isEmpty ? 'Edzés' : s.name),
+                          titleCase(s.name.isEmpty
+                              ? t('dashboard.workout_default')
+                              : s.name),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -648,7 +670,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     if (s.finishedAt != null) parts.add(_fmtDateTime(s.finishedAt!));
     final d = s.duration;
     if (d != null) parts.add(_fmtDuration(d));
-    parts.add('${s.exercises.length} GYAKORLAT');
+    parts.add(tFmt('progress.n_exercises', {'n': s.exercises.length}));
     final vol = _sessionVolume(s);
     if (vol > 0) parts.add(_fmtVolume(vol).toUpperCase());
     return parts.join(' · ').toUpperCase();
@@ -676,12 +698,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null && _groups.isEmpty) {
-      return _message(Icons.cloud_off, _error!, 'Újra', _load);
+      return _message(Icons.cloud_off, _error!, t('common.retry'), _load);
     }
     if (_groups.isEmpty) {
       return _message(
-          Icons.show_chart, 'Még nincs adat', null, null,
-          subtitle: 'Naplózz edzéseket, hogy lásd a fejlődésed.');
+          Icons.show_chart, t('progress.empty_exercises_title'), null, null,
+          subtitle: t('progress.empty_exercises_subtitle'));
     }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -716,7 +738,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
                               fontWeight: FontWeight.w700,
                               color: AppColors.onSurface)),
                       const SizedBox(height: 4),
-                      Text('${g.points.length} alkalom',
+                      Text(
+                          tFmt('progress.n_sessions',
+                              {'n': g.points.length}),
                           style: const TextStyle(
                               fontSize: 13, color: AppColors.muted)),
                     ],
@@ -886,7 +910,7 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                     padding: const EdgeInsets.only(right: 22),
                     child: Column(
                       children: [
-                        Text(m,
+                        Text(_metricLabel(m),
                             style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -910,9 +934,9 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
           SizedBox(
             height: 180,
             child: values.length < 2
-                ? const Center(
-                    child: Text('Legalább 2 alkalom kell a grafikonhoz',
-                        style: TextStyle(color: AppColors.muted)))
+                ? Center(
+                    child: Text(t('progress.chart_need_two'),
+                        style: const TextStyle(color: AppColors.muted)))
                 : CustomPaint(
                     size: const Size(double.infinity, 180),
                     painter: _LinePainter(values),
@@ -1029,24 +1053,34 @@ class SessionDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(color: AppColors.onSurface),
-        title: Text(titleCase(session.name.isEmpty ? 'Edzés' : session.name)),
+        title: Text(titleCase(session.name.isEmpty
+            ? t('dashboard.workout_default')
+            : session.name)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           Row(
             children: [
-              _stat('Kész', '${session.doneSets}/${session.totalSets} set'),
+              _stat(
+                  t('progress.detail_done'),
+                  tFmt('progress.detail_sets_value', {
+                    'done': session.doneSets,
+                    'total': session.totalSets,
+                  })),
               if (session.duration != null)
-                _stat('Idő', _fmtDuration(session.duration!)),
+                _stat(t('progress.detail_time'),
+                    _fmtDuration(session.duration!)),
             ],
           ),
           const SizedBox(height: 8),
           if (started != null)
-            Text('Kezdés: ${_fmtDateTime(started)}',
+            Text(tFmt('progress.detail_started', {'time': _fmtDateTime(started)}),
                 style: const TextStyle(color: AppColors.muted, fontSize: 13)),
           if (finished != null)
-            Text('Befejezés: ${_fmtDateTime(finished)}',
+            Text(
+                tFmt('progress.detail_finished',
+                    {'time': _fmtDateTime(finished)}),
                 style: const TextStyle(color: AppColors.muted, fontSize: 13)),
           const SizedBox(height: 16),
           ...session.exercises.map(_exerciseBlock),
@@ -1109,7 +1143,7 @@ class SessionDetailScreen extends StatelessWidget {
                             fontWeight: FontWeight.w600)),
                   ),
                   Expanded(
-                    child: Text('${s.reps} reps',
+                    child: Text('${s.reps} ${t('common.reps')}',
                         style: const TextStyle(
                             color: AppColors.onSurface,
                             fontSize: 15,
