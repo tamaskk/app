@@ -67,6 +67,23 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
+  # Generates platform app icons (iOS + Android) from a single source image.
+  # Run after changing the icon: `dart run flutter_launcher_icons`.
+  flutter_launcher_icons: ^0.14.1
+
+# App icon generation. The white "flexing arm" logo (assets/mainlogo.png) is
+# composited onto the brand black background (matches the app theme) in
+# assets/icon/. Android adaptive uses a more-padded foreground so the logo
+# survives the launcher's safe-zone crop.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  remove_alpha_ios: true
+  background_color_ios: "#000000"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

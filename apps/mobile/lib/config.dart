@@ -9,7 +9,7 @@
 const String apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
   // defaultValue: 'https://9326-87-97-31-222.ngrok-free.app',
-  defaultValue: 'https://9326-87-97-31-222.ngrok-free.app',
+  defaultValue: 'https://app-web-nu-eight.vercel.app',
 );
 
 /// Base URL of the Gym Exercise API (ExerciseDB-backed catalogue).
