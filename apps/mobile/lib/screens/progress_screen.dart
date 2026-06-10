@@ -294,8 +294,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Title rendered in the body so it can grow with the design.
-      appBar: AppBar(title: const SizedBox.shrink()),
+      // Brand header, consistent with every other tab. The big "FEJLŐDÉS"
+      // section title still lives in the body below.
+      appBar: AppBar(title: const Text('HEFTOR')),
       // Stretch so the body-level title sits flush left like every other
       // screen — without this, Column's default `center` cross-alignment
       // wraps the intrinsic-width Padding and visually centres the title.

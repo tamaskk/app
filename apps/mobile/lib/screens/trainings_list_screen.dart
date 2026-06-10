@@ -235,7 +235,7 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const SizedBox.shrink(),
+        title: const Text('HEFTOR'),
         // Top-left generate button — always reachable, no matter how far the
         // user has scrolled. Only rendered when the auth service is available
         // (the generator endpoint requires a signed-in session).

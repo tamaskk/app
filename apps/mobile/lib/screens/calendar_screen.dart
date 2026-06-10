@@ -156,6 +156,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     return Scaffold(
+      // Brand header, consistent with every other tab. The big "NAPTÁR"
+      // section title still lives in the body below.
+      appBar: AppBar(title: const Text('HEFTOR')),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
