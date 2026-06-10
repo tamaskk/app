@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="hu"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#353434",
+                        "primary-container": "#e2e2e2",
+                        "inverse-on-surface": "#313030",
+                        "on-primary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "background": "#000000",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "secondary": "#c8c6c8",
+                        "on-tertiary-container": "#636565",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary-container": "#e2e2e2",
+                        "secondary-fixed-dim": "#c8c6c8",
+                        "surface-container-low": "#1c1b1b",
+                        "on-secondary-fixed": "#1b1b1d",
+                        "outline": "#8e9192",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-tint": "#c6c6c7",
+                        "outline-variant": "#444748",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "surface-dim": "#141313",
+                        "on-primary": "#2f3131",
+                        "primary-fixed": "#e2e2e2",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c7c8",
+                        "secondary-fixed": "#e4e2e4",
+                        "secondary-container": "#474649",
+                        "on-surface": "#e5e2e1",
+                        "surface-bright": "#3a3939",
+                        "primary": "#ffffff",
+                        "on-primary-fixed": "#1a1c1c",
+                        "surface": "#141313",
+                        "on-primary-container": "#636565",
+                        "on-error": "#690005",
+                        "on-background": "#e5e2e1",
+                        "on-secondary": "#303032",
+                        "surface-container": "#201f1f",
+                        "surface-container-highest": "#353434",
+                        "tertiary": "#ffffff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#b6b4b7",
+                        "on-secondary-fixed-variant": "#474649",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-tertiary": "#2f3131"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "margin-mobile": "20px",
+                        "xs": "8px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "base": "4px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-xl": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "stat-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "display-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "stat-lg": ["64px", {"lineHeight": "1", "letterSpacing": "-0.05em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background min-h-screen flex flex-col pb-24">
+<!-- TopAppBar -->
+<header class="bg-background flex justify-between items-center w-full px-margin-mobile h-14 fixed top-0 z-50">
+<div class="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer active:scale-95 transition-transform duration-100">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</div>
+<h1 class="text-headline-md font-headline-md font-extrabold tracking-tighter text-primary">ERŐNLÉT</h1>
+<div class="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer active:scale-95 transition-transform duration-100">
+<span class="material-symbols-outlined text-primary">more_vert</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="mt-14 px-margin-mobile flex flex-col gap-xl">
+<!-- Header Section -->
+<section class="flex justify-between items-end mt-lg">
+<div>
+<span class="text-headline-md font-headline-md opacity-40">Hey,</span>
+<h2 class="text-headline-md font-headline-md text-primary">Alex</h2>
+</div>
+<div class="flex items-center gap-base">
+<span class="text-headline-md font-headline-md text-primary">49</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+</section>
+<!-- Calendar View -->
+<section class="flex justify-between items-center no-scrollbar">
+<div class="flex flex-col items-center gap-xs">
+<span class="text-label-sm font-label-sm opacity-40">23</span>
+<span class="text-label-sm font-label-sm opacity-40">Mo</span>
+</div>
+<div class="flex flex-col items-center gap-xs relative">
+<div class="absolute -top-4 w-1 h-1 bg-primary rounded-full"></div>
+<span class="text-label-sm font-label-sm opacity-40">24</span>
+<span class="text-label-sm font-label-sm opacity-40">Tu</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-label-sm font-label-sm opacity-40">25</span>
+<span class="text-label-sm font-label-sm opacity-40">We</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-label-sm font-label-sm text-primary font-bold">26</span>
+<span class="text-label-sm font-label-sm text-error font-bold">Th</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-label-sm font-label-sm opacity-40">27</span>
+<span class="text-label-sm font-label-sm opacity-40">Fr</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-label-sm font-label-sm opacity-40">28</span>
+<span class="text-label-sm font-label-sm opacity-40">Sa</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="text-label-sm font-label-sm opacity-40">1</span>
+<span class="text-label-sm font-label-sm opacity-40">Su</span>
+</div>
+</section>
+<!-- Today's Workout Card (Active) -->
+<section class="relative">
+<div class="bg-gradient-to-br from-[#2C2C2E] to-[#000000] p-lg rounded-[24px] overflow-hidden min-h-[200px] flex flex-col justify-between border border-[#1C1C1E] active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 bg-error rounded-full animate-pulse"></div>
+<span class="text-label-sm font-label-sm text-primary uppercase tracking-widest">Today • 57 min</span>
+</div>
+<span class="text-[64px] leading-none font-bold opacity-20 select-none">02</span>
+</div>
+<div>
+<h3 class="text-display-xl font-display-xl text-primary mb-lg">Lower</h3>
+<div class="space-y-sm">
+<p class="text-label-sm font-label-sm opacity-60">1 workout out of 3 completed this week</p>
+<div class="w-full h-1 bg-[#2C2C2E] rounded-full flex gap-xs">
+<div class="flex-1 h-full bg-primary rounded-full"></div>
+<div class="flex-1 h-full bg-[#1C1C1E] rounded-full"></div>
+<div class="flex-1 h-full bg-[#1C1C1E] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Workout Plan List -->
+<section class="flex flex-col gap-md">
+<!-- Upper 01 Card -->
+<div class="bg-white p-lg rounded-[24px] flex justify-between items-center active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<div class="flex flex-col gap-base">
+<h4 class="text-headline-md font-headline-md text-background">Upper</h4>
+<span class="text-body-md font-body-md text-background opacity-60">5 exercises</span>
+</div>
+<span class="text-[48px] font-bold text-background opacity-10">01</span>
+</div>
+<!-- Upper 03 Card -->
+<div class="bg-white p-lg rounded-[24px] flex justify-between items-center active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<div class="flex flex-col gap-base">
+<h4 class="text-headline-md font-headline-md text-background">Upper</h4>
+<span class="text-body-md font-body-md text-background opacity-60">7 exercises</span>
+</div>
+<span class="text-[48px] font-bold text-background opacity-10">03</span>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe border-t border-surface-container-highest bg-background">
+<button class="flex flex-col items-center justify-center text-primary hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined">fitness_center</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined">timer</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined">calendar_today</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined">insights</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction for workout cards
+        document.querySelectorAll('section div[class*="active:scale"]').forEach(card => {
+            card.addEventListener('click', () => {
+                // Future expansion: navigation to specific workout detail
+                console.log('Workout card tapped');
+            });
+        });
+
+        // Navigation state handler
+        const navButtons = document.querySelectorAll('nav button');
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                navButtons.forEach(b => {
+                    b.classList.remove('text-primary');
+                    b.classList.add('text-outline');
+                    b.querySelector('span').style.fontVariationSettings = "'FILL' 0";
+                });
+                this.classList.remove('text-outline');
+                this.classList.add('text-primary');
+                this.querySelector('span').style.fontVariationSettings = "'FILL' 1";
+            });
+        });
+    </script>
+</body></html>

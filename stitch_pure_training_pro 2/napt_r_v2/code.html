@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="hu"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ERŐNLÉT - Naptár</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#353434",
+                        "primary-container": "#e2e2e2",
+                        "inverse-on-surface": "#313030",
+                        "on-primary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "background": "#141313",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "secondary": "#c8c6c8",
+                        "on-tertiary-container": "#636565",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary-container": "#e2e2e2",
+                        "secondary-fixed-dim": "#c8c6c8",
+                        "surface-container-low": "#1c1b1b",
+                        "on-secondary-fixed": "#1b1b1d",
+                        "outline": "#8e9192",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-tint": "#c6c6c7",
+                        "outline-variant": "#444748",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "surface-dim": "#141313",
+                        "on-primary": "#2f3131",
+                        "primary-fixed": "#e2e2e2",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c7c8",
+                        "secondary-fixed": "#e4e2e4",
+                        "secondary-container": "#474649",
+                        "on-surface": "#e5e2e1",
+                        "surface-bright": "#3a3939",
+                        "primary": "#ffffff",
+                        "on-primary-fixed": "#1a1c1c",
+                        "surface": "#141313",
+                        "on-primary-container": "#636565",
+                        "on-error": "#690005",
+                        "on-background": "#e5e2e1",
+                        "on-secondary": "#303032",
+                        "surface-container": "#201f1f",
+                        "surface-container-highest": "#353434",
+                        "tertiary": "#ffffff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#b6b4b7",
+                        "on-secondary-fixed-variant": "#474649",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-tertiary": "#2f3131"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "margin-mobile": "20px",
+                        "xs": "8px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "base": "4px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-xl": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "stat-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "display-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "stat-lg": ["64px", {"lineHeight": "1", "letterSpacing": "-0.05em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+        .dot { height: 8px; width: 8px; border-radius: 50%; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background selection:bg-primary selection:text-background">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-background flex justify-between items-center px-margin-mobile h-14">
+<div class="flex items-center gap-xs">
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-95 duration-100">arrow_back</button>
+<h1 class="text-headline-md font-headline-md font-extrabold tracking-tighter text-primary">ERŐNLÉT</h1>
+</div>
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-95 duration-100">more_vert</button>
+</header>
+<main class="pt-14 pb-24 px-margin-mobile max-w-md mx-auto">
+<!-- Streak Hero Section (Inspired by Image 23 Top Section) -->
+<section class="mt-xl mb-xl">
+<div class="bg-surface-container-lowest rounded-[32px] py-12 flex flex-col items-center justify-center text-center">
+<span class="text-stat-lg font-stat-lg text-primary">49</span>
+<span class="text-headline-md font-headline-md text-outline tracking-tight -mt-2">week streak</span>
+</div>
+</section>
+<!-- Calendar Section (Inspired by Image 23 Bottom Section) -->
+<section class="bg-primary text-background rounded-[32px] p-lg mb-xl shadow-xl">
+<div class="flex items-baseline gap-2 mb-lg">
+<span class="h-3 w-3 rounded-full bg-error inline-block mb-1"></span>
+<h2 class="text-headline-md font-headline-md text-background">Feb <span class="text-outline-variant/40">26</span></h2>
+</div>
+<div class="calendar-grid text-center mb-6">
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">M</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">T</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">W</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">T</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">F</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">S</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">S</span>
+<!-- Calendar Row 1 -->
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<!-- Calendar Row 2 -->
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<!-- Calendar Row 3 -->
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<!-- Calendar Row 4 -->
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<!-- Calendar Row 5 (Highlight Row) -->
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-background"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-error"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+<div class="flex justify-center"><div class="dot bg-surface-variant/20"></div></div>
+</div>
+<h3 class="text-headline-md font-headline-md text-outline-variant/40 mb-4">Mar</h3>
+<div class="calendar-grid text-center">
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">M</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">T</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">W</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">T</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">F</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">S</span>
+<span class="text-label-sm font-label-sm text-outline-variant/60 uppercase">S</span>
+</div>
+</section>
+<!-- Workout Summary Section (Inspired by Image 24) -->
+<section class="space-y-md">
+<div class="bg-primary text-background rounded-[32px] p-lg">
+<div class="flex justify-center items-center gap-2 mb-8">
+<span class="material-symbols-outlined text-outline">emoji_events</span>
+<h4 class="text-label-sm font-label-sm font-bold uppercase tracking-widest text-background">Congratulations</h4>
+<span class="material-symbols-outlined text-outline">emoji_events</span>
+</div>
+<div class="text-center mb-8">
+<p class="text-body-lg font-body-lg text-outline-variant/60 mb-2">You have completed</p>
+<h2 class="text-headline-lg font-headline-lg text-background leading-tight">
+                        15 sets <span class="text-outline-variant/40 font-normal">and lifted</span> 
+                        7678 kg <span class="text-outline-variant/40 font-normal">in</span> 47 min
+                    </h2>
+</div>
+<div class="flex justify-center gap-base">
+<div class="bg-surface-container-lowest/10 px-md py-xs rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-error">local_fire_department</span>
+<span class="text-label-sm font-label-sm text-background">238 kcal</span>
+</div>
+<div class="bg-surface-container-lowest/10 px-md py-xs rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-on-secondary-container">military_tech</span>
+<span class="text-label-sm font-label-sm text-background">1 record</span>
+</div>
+</div>
+</div>
+<!-- Exercise Cards -->
+<div class="bg-surface-container rounded-[24px] p-md flex justify-between items-center hover:opacity-80 transition-opacity cursor-pointer">
+<span class="text-body-md font-bold text-primary">Incline Bench Press</span>
+<div class="flex items-center gap-xs">
+<span class="bg-surface-container-highest h-6 w-6 flex items-center justify-center rounded-full text-[10px] font-bold">R</span>
+<span class="bg-surface-container-highest h-6 w-6 flex items-center justify-center rounded-full text-[10px] font-bold">V</span>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</div>
+</div>
+<div class="bg-surface-container rounded-[24px] p-md flex justify-between items-center hover:opacity-80 transition-opacity cursor-pointer">
+<span class="text-body-md font-bold text-primary">Chest Press</span>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</div>
+</section>
+</main>
+<!-- Bottom Nav Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-background flex justify-around items-center px-4 py-3 pb-safe border-t border-surface-container-highest">
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined">home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined">fitness_center</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined">timer</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary active:scale-90 duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline hover:text-primary transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined">insights</span>
+</button>
+</nav>
+<script>
+        // Optional micro-interaction for cards
+        document.querySelectorAll('.cursor-pointer').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.98)';
+                card.style.transition = 'transform 0.1s ease';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = 'scale(1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body></html>

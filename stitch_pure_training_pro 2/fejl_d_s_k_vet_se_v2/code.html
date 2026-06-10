@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="hu"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ERŐNLÉT - Fejlődés követése</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#353434",
+                        "primary-container": "#e2e2e2",
+                        "inverse-on-surface": "#313030",
+                        "on-primary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "background": "#141313",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "secondary": "#c8c6c8",
+                        "on-tertiary-container": "#636565",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary-container": "#e2e2e2",
+                        "secondary-fixed-dim": "#c8c6c8",
+                        "surface-container-low": "#1c1b1b",
+                        "on-secondary-fixed": "#1b1b1d",
+                        "outline": "#8e9192",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-tint": "#c6c6c7",
+                        "outline-variant": "#444748",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "surface-dim": "#141313",
+                        "on-primary": "#2f3131",
+                        "primary-fixed": "#e2e2e2",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c7c8",
+                        "secondary-fixed": "#e4e2e4",
+                        "secondary-container": "#474649",
+                        "on-surface": "#e5e2e1",
+                        "surface-bright": "#3a3939",
+                        "primary": "#ffffff",
+                        "on-primary-fixed": "#1a1c1c",
+                        "surface": "#141313",
+                        "on-primary-container": "#636565",
+                        "on-error": "#690005",
+                        "on-background": "#e5e2e1",
+                        "on-secondary": "#303032",
+                        "surface-container": "#201f1f",
+                        "surface-container-highest": "#353434",
+                        "tertiary": "#ffffff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#b6b4b7",
+                        "on-secondary-fixed-variant": "#474649",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-tertiary": "#2f3131"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "margin-mobile": "20px",
+                        "xs": "8px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "base": "4px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-xl": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "stat-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "display-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "stat-lg": ["64px", {"lineHeight": "1", "letterSpacing": "-0.05em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #141313;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .circular-chart {
+            display: block;
+            margin: 10px auto;
+            max-width: 80%;
+            max-height: 250px;
+        }
+        .circle-bg {
+            fill: none;
+            stroke: #2c2c2e;
+            stroke-width: 3.8;
+        }
+        .circle {
+            fill: none;
+            stroke-width: 3.8;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.3s ease;
+        }
+        .chart-grid line {
+            stroke: #2c2c2e;
+            stroke-width: 1;
+        }
+        .chart-line {
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+        .chart-point {
+            fill: #ffffff;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile h-14 bg-background dark:bg-background">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-primary dark:text-primary hover:opacity-80 transition-opacity Active: scale-95 transition-transform duration-100">arrow_back</button>
+<h1 class="text-headline-md font-headline-md font-extrabold tracking-tighter text-primary dark:text-primary">ERŐNLÉT</h1>
+</div>
+<button class="material-symbols-outlined text-primary dark:text-primary hover:opacity-80 transition-opacity Active: scale-95 transition-transform duration-100">more_vert</button>
+</header>
+<main class="flex-1 pt-14 pb-24 px-margin-mobile space-y-xl">
+<!-- Global Section -->
+<section class="mt-8">
+<div class="flex items-center justify-between mb-lg">
+<div class="flex items-center gap-4">
+<h2 class="text-headline-md font-headline-md text-primary">Global</h2>
+<h2 class="text-headline-md font-headline-md text-outline">Exercises</h2>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-xs">
+<!-- Progress -->
+<div class="flex flex-col items-center">
+<div class="relative w-16 h-16">
+<svg class="circular-chart" viewbox="0 0 36 36">
+<path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+<path class="circle stroke-white" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-dasharray="30, 100"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-sm font-label-sm text-primary">1.4</span>
+</div>
+</div>
+<span class="mt-xs text-label-sm font-label-sm text-outline uppercase tracking-wider">Progress</span>
+</div>
+<!-- Consistency -->
+<div class="flex flex-col items-center">
+<div class="relative w-16 h-16">
+<svg class="circular-chart" viewbox="0 0 36 36">
+<path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+<path class="circle stroke-white" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-dasharray="65, 100"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-sm font-label-sm text-primary">5.4</span>
+</div>
+</div>
+<span class="mt-xs text-label-sm font-label-sm text-outline uppercase tracking-wider">Consistency</span>
+</div>
+<!-- Intensity -->
+<div class="flex flex-col items-center">
+<div class="relative w-16 h-16">
+<svg class="circular-chart" viewbox="0 0 36 36">
+<path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+<path class="circle stroke-white" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-dasharray="85, 100"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-sm font-label-sm text-primary">8.6</span>
+</div>
+</div>
+<span class="mt-xs text-label-sm font-label-sm text-outline uppercase tracking-wider">Intensity</span>
+</div>
+<!-- Volume -->
+<div class="flex flex-col items-center">
+<div class="relative w-16 h-16">
+<svg class="circular-chart" viewbox="0 0 36 36">
+<path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+<path class="circle stroke-white" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-dasharray="25, 100"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-sm font-label-sm text-primary">1.2</span>
+</div>
+</div>
+<span class="mt-xs text-label-sm font-label-sm text-outline uppercase tracking-wider">Volume</span>
+</div>
+</div>
+<!-- Time Filter -->
+<div class="flex justify-between mt-xl">
+<button class="text-label-sm font-label-sm text-outline px-4 py-2 hover:text-primary transition-colors">1W</button>
+<button class="text-label-sm font-label-sm text-outline px-4 py-2 hover:text-primary transition-colors">1M</button>
+<button class="text-label-sm font-label-sm text-outline px-4 py-2 hover:text-primary transition-colors">1Y</button>
+<button class="text-label-sm font-label-sm text-primary bg-surface-container-high px-6 py-2 rounded-full">All</button>
+</div>
+</section>
+<!-- Stats Section -->
+<section class="space-y-md">
+<div class="flex items-end gap-2">
+<span class="text-display-xl font-display-xl text-primary">2,5K</span>
+<span class="text-headline-md font-headline-md text-outline mb-2">sets</span>
+<div class="ml-auto flex items-center gap-1 text-label-sm font-label-sm text-outline mb-2">
+                    Sets <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</div>
+</div>
+<!-- Bar Chart Simulation -->
+<div class="h-48 flex items-end justify-between gap-1 mt-md">
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[15%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[65%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[45%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[85%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[55%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[95%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[75%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[35%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[45%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[25%]"></div>
+<div class="w-full bg-surface-container-highest opacity-30 rounded-full h-[10%]"></div>
+</div>
+<div class="flex justify-between text-label-sm font-label-sm text-outline pt-2">
+<span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span><span>J</span>
+</div>
+</section>
+<!-- Exercise Detail -->
+<section class="pt-xl space-y-lg">
+<div class="flex items-center justify-between">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-headline-md font-headline-md text-primary">Bench Press</h3>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</div>
+<p class="text-body-md font-body-md text-outline">Barbell</p>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg text-primary">139</span>
+<span class="text-headline-md font-headline-md text-outline">Kg</span>
+</div>
+<div class="flex items-center gap-1 text-label-sm font-label-sm text-green-500">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">arrow_drop_up</span>
+                        8.56 %
+                    </div>
+</div>
+</div>
+<div class="flex gap-lg overflow-x-auto custom-scrollbar border-b border-surface-container-highest pb-sm">
+<button class="text-label-sm font-label-sm text-primary whitespace-nowrap relative after:content-[''] after:absolute after:-bottom-sm after:left-0 after:w-full after:h-[2px] after:bg-primary">1RM</button>
+<button class="text-label-sm font-label-sm text-outline whitespace-nowrap">Max Weight</button>
+<button class="text-label-sm font-label-sm text-outline whitespace-nowrap">Volume</button>
+<button class="text-label-sm font-label-sm text-outline whitespace-nowrap">Total Reps</button>
+</div>
+<!-- Line Chart SVG -->
+<div class="relative w-full h-64 mt-lg">
+<svg class="w-full h-full" preserveaspectratio="none">
+<!-- Grid Lines -->
+<g class="chart-grid">
+<line x1="0" x2="100%" y1="20%" y2="20%"></line>
+<line x1="0" x2="100%" y1="40%" y2="40%"></line>
+<line x1="0" x2="100%" y1="60%" y2="60%"></line>
+<line x1="0" x2="100%" y1="80%" y2="80%"></line>
+</g>
+<!-- Line Data -->
+<path class="chart-line" d="M 0 160 L 50 160 L 100 160 L 150 100 L 250 100 L 300 40 L 400 40" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+<!-- Points -->
+<circle class="chart-point" cx="10%" cy="62%" r="2"></circle>
+<circle class="chart-point" cx="20%" cy="62%" r="2"></circle>
+<circle class="chart-point" cx="30%" cy="62%" r="2"></circle>
+<circle class="chart-point" cx="45%" cy="38%" r="2"></circle>
+<circle class="chart-point" cx="60%" cy="38%" r="2"></circle>
+<circle class="chart-point" cx="75%" cy="15%" r="3"></circle>
+<circle class="chart-point" cx="90%" cy="15%" r="3"></circle>
+</svg>
+<!-- Y-axis labels -->
+<div class="absolute right-0 top-0 h-full flex flex-col justify-between text-[10px] text-outline opacity-50 py-2">
+<span>145</span>
+<span>140</span>
+<span>135</span>
+<span>130</span>
+<span>125</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-background dark:bg-background border-t border-surface-container-highest dark:border-surface-container-highest">
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">fitness_center</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">insights</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">calendar_today</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline dark:text-outline hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">timer</span>
+</button>
+</nav>
+<script>
+        // Micro-interactions for chart points or transitions could go here
+        document.querySelectorAll('.chart-point').forEach(point => {
+            point.addEventListener('mouseenter', () => {
+                point.setAttribute('r', '5');
+                point.style.transition = 'r 0.2s ease';
+            });
+            point.addEventListener('mouseleave', () => {
+                point.setAttribute('r', '3');
+            });
+        });
+    </script>
+</body></html>
