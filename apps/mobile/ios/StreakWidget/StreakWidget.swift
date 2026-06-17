@@ -78,7 +78,6 @@ private extension View {
     }
 }
 
-@main
 struct StreakWidget: Widget {
     // This string is the WidgetKit "kind" — it must match the `iOSName`
     // passed to `HomeWidget.updateWidget` on the Flutter side.

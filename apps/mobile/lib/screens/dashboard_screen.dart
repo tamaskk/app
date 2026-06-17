@@ -135,8 +135,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _stagnating = stagnating;
       _inProgress = inProgress;
     });
-    // Mirror the streak onto the iOS home-screen widget (best-effort).
-    HomeWidgetSync.updateStreak(streak);
+    // Mirror the streak + this month's training days + weekly goal progress
+    // onto the iOS home-screen widgets (best-effort).
+    HomeWidgetSync.sync(
+      streak: streak,
+      workoutDates: dates,
+      weekGoal: _weeklyGoal,
+    );
   }
 
   int _dayKey(DateTime d) =>
