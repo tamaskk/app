@@ -15,6 +15,7 @@ import 'screens/register_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/paywall_screen.dart';
+import 'services/home_widget_sync.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,9 @@ void main() async {
   // Warm up the notifications plugin in the background so the first user
   // interaction with the reminders UI doesn't pay the timezone-init cost.
   NotificationService.instance.initialise();
+  // Point home_widget at the shared App Group so streak writes reach the
+  // iOS home-screen widget (best-effort).
+  HomeWidgetSync.init();
   runApp(const HeftorApp());
 }
 

@@ -41,6 +41,10 @@ dependencies:
   # Persists the auth session token across app launches.
   shared_preferences: ^2.3.2
 
+  # Home-screen widgets (iOS WidgetKit / Android). Used to surface the
+  # weekly streak on the phone home screen. See ios/StreakWidget/.
+  home_widget: ^0.7.0
+
   # Opens external URLs (e.g. a YouTube search for an exercise's how-to).
   url_launcher: ^6.3.1
 

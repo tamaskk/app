@@ -5,6 +5,7 @@ import '../models/api_models.dart';
 import '../services/api.dart';
 import '../services/auth_service.dart';
 import '../services/workout_progress.dart';
+import '../services/home_widget_sync.dart';
 import '../utils/recent_pr.dart';
 import '../utils/streak.dart';
 import '../utils/text.dart';
@@ -125,14 +126,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .map((s) => s.finishedAt ?? s.startedAt)
         .whereType<DateTime>()
         .toList();
+    final streak = weeklyStreak(dates);
     setState(() {
       _sessions = sessions;
       _trainings = trainings;
-      _streak = weeklyStreak(dates);
+      _streak = streak;
       _workoutDays = dates.map(_dayKey).toSet();
       _stagnating = stagnating;
       _inProgress = inProgress;
     });
+    // Mirror the streak onto the iOS home-screen widget (best-effort).
+    HomeWidgetSync.updateStreak(streak);
   }
 
   int _dayKey(DateTime d) =>
