@@ -41,9 +41,16 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
   String? _error;
   int _requestId = 0; // guards against out-of-order responses
 
-  // Muscle-group filter.
+  // Browse filter — by body part (Chest, Back, Shoulders …). The catalogue's
+  // /muscles list mixes muscles and body parts, so filtering exercises by a
+  // body-part value as a *target muscle* (e.g. targetMuscles=chest) finds
+  // nothing — chest is a bodyPart whose target muscle is "pectorals". We browse
+  // on the bodyParts axis, which is the natural top-level grouping anyway.
+  List<String> _bodyParts = [];
+  String? _bodyPartFilter;
+
+  // Target-muscle options for the custom-exercise sheet (a finer-grained list).
   List<String> _muscles = [];
-  String? _muscleFilter;
 
   // Picked exercises, keyed by catalogue id so toggling is cheap.
   final Map<String, ApiExercise> _selected = {};
@@ -64,6 +71,7 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadBodyParts();
     _loadMuscles();
     _loadFirstPage();
   }
@@ -77,6 +85,15 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
     _api.dispose();
     _exApi.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadBodyParts() async {
+    try {
+      final parts = await _exApi.bodyParts();
+      if (mounted) setState(() => _bodyParts = parts);
+    } catch (_) {
+      // Filters are optional; browsing still works without them.
+    }
   }
 
   Future<void> _loadMuscles() async {
@@ -120,7 +137,7 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
         });
       } else {
         final page = await _exApi.listExercises(
-          targetMuscles: _muscleFilter == null ? null : [_muscleFilter!],
+          bodyParts: _bodyPartFilter == null ? null : [_bodyPartFilter!],
           limit: _pageSize,
         );
         if (!mounted || reqId != _requestId) return;
@@ -150,7 +167,7 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
     setState(() => _loadingMore = true);
     try {
       final page = await _exApi.listExercises(
-        targetMuscles: _muscleFilter == null ? null : [_muscleFilter!],
+        bodyParts: _bodyPartFilter == null ? null : [_bodyPartFilter!],
         limit: _pageSize,
         after: _nextCursor,
       );
@@ -183,8 +200,8 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
     return e.message;
   }
 
-  void _selectMuscle(String? muscle) {
-    setState(() => _muscleFilter = muscle);
+  void _selectBodyPart(String? bodyPart) {
+    setState(() => _bodyPartFilter = bodyPart);
     _loadFirstPage();
   }
 
@@ -416,8 +433,8 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
               ),
             ),
           ),
-          // Muscle-group filter — only while browsing (not fuzzy-searching).
-          if (_muscles.isNotEmpty && !_searching) _muscleChips(),
+          // Body-part filter — only while browsing (not fuzzy-searching).
+          if (_bodyParts.isNotEmpty && !_searching) _bodyPartChips(),
           _ownExerciseButton(),
           Expanded(child: _resultsBody()),
         ],
@@ -425,24 +442,24 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
     );
   }
 
-  Widget _muscleChips() {
+  Widget _bodyPartChips() {
     return SizedBox(
       height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _muscles.length + 1,
+        itemCount: _bodyParts.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 4),
         itemBuilder: (context, i) {
           if (i == 0) {
-            return _chip(
-                t('create.all_filter'), _muscleFilter == null, () => _selectMuscle(null));
+            return _chip(t('create.all_filter'), _bodyPartFilter == null,
+                () => _selectBodyPart(null));
           }
-          final m = _muscles[i - 1];
+          final p = _bodyParts[i - 1];
           return _chip(
-            m,
-            _muscleFilter == m,
-            () => _selectMuscle(_muscleFilter == m ? null : m),
+            p,
+            _bodyPartFilter == p,
+            () => _selectBodyPart(_bodyPartFilter == p ? null : p),
           );
         },
       ),

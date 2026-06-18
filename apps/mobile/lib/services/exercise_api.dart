@@ -91,14 +91,30 @@ class ExerciseApi {
   Future<List<String>> muscles() => _names('/muscles');
   Future<List<String>> equipments() => _names('/equipments');
 
-  /// Metadata endpoints return `{ success, data: [{ name }] }`.
+  /// Metadata endpoints return `{ success, data: [{ name }] }`. `name` is a
+  /// plain string in the legacy shape, or a localized group `[{lng,value}]`
+  /// in the localized catalogue. We key off the English value so it stays a
+  /// stable filter key the catalogue matches against.
   Future<List<String>> _names(String path) async {
     final json = await _get(_uri(path));
     final data = (json['data'] as List?) ?? const [];
-    return data
-        .map((e) => (e is Map ? e['name'] : e)?.toString() ?? '')
-        .where((s) => s.isNotEmpty)
-        .toList();
+    return data.map(_name).where((s) => s.isNotEmpty).toList();
+  }
+
+  String _name(dynamic entry) {
+    final n = entry is Map ? entry['name'] : entry;
+    if (n is String) return n;
+    if (n is List) {
+      String? en, first;
+      for (final m in n) {
+        if (m is! Map) continue;
+        final v = m['value']?.toString();
+        first ??= v;
+        if (m['lng']?.toString() == 'en') en = v;
+      }
+      return en ?? first ?? '';
+    }
+    return n?.toString() ?? '';
   }
 
   void dispose() => _client.close();
