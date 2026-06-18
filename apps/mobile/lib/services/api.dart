@@ -159,9 +159,13 @@ class Api {
     String? name,
     required List<Map<String, dynamic>> exercises,
   }) async {
+    final token = await _authToken();
     final res = await _client.patch(
       _uri('/api/trainings/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({
         if (name != null) 'name': name,
         'exercises': exercises,
@@ -220,7 +224,13 @@ class Api {
 
   /// Delete a training.
   Future<void> deleteTraining(String id) async {
-    final res = await _client.delete(_uri('/api/trainings/$id'));
+    // Scope the call to this user — without the token the server treats it as
+    // anonymous (userId:null), fails the ownership check, and 404s.
+    final token = await _authToken();
+    final res = await _client.delete(
+      _uri('/api/trainings/$id'),
+      headers: {if (token != null) 'Authorization': 'Bearer $token'},
+    );
     if (res.statusCode != 204 &&
         (res.statusCode < 200 || res.statusCode >= 300)) {
       final body = res.body.isEmpty ? null : jsonDecode(res.body);
