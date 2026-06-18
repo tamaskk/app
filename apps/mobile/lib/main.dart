@@ -51,6 +51,17 @@ class HeftorApp extends StatelessWidget {
         title: 'HEFTOR',
         theme: AppTheme.dark,
         debugShowCheckedModeBanner: false,
+        // Tap anywhere outside a focused text field to dismiss the keyboard.
+        // Wraps every screen once here; `translucent` lets taps still reach
+        // the widgets underneath, and we only unfocus if something is focused.
+        builder: (context, child) => GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () {
+            final focus = FocusManager.instance.primaryFocus;
+            if (focus != null && focus.hasFocus) focus.unfocus();
+          },
+          child: child,
+        ),
         home: const AuthGate(),
       ),
     );
