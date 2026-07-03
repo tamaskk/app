@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error("Missing MONGODB_URI environment variable. Add it to apps/web/.env.local");
-}
+// Read the URI lazily (inside connectToDatabase), NOT at module load. A
+// top-level throw here fired during `next build` whenever MONGODB_URI wasn't
+// in the build environment (e.g. Turborepo's strict env mode strips undeclared
+// vars), because every API route imports this module. The build doesn't need a
+// live DB, so importing must be side-effect-free — only an actual connection
+// attempt requires the secret.
 
 // Cache the connection across hot reloads in development to avoid
 // opening a new connection on every change (and exhausting the pool).
@@ -29,8 +30,15 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     return cached.conn;
   }
 
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error(
+      "Missing MONGODB_URI environment variable. Add it to apps/web/.env.local",
+    );
+  }
+
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI!, {
+    cached.promise = mongoose.connect(uri, {
       bufferCommands: false,
     });
   }

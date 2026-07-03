@@ -3,6 +3,19 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "MONGODB_URI",
+        "JWT_SECRET",
+        "MUSCLEWIKI_API_KEY",
+        "MAIL_PROVIDER",
+        "RESEND_API_KEY",
+        "APPLE_CLIENT_ID",
+        "GOOGLE_CLIENT_IDS",
+        "APP_URL",
+        "EXERCISE_API_BASE_URL",
+        "FREE_EXERCISE_DB_URL",
+        "FREE_EXERCISE_DB_IMAGE_BASE"
+      ],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {
