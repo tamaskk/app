@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
+import '../i18n/app_strings.dart';
 import '../models/workout.dart';
 import '../models/exercise_api_models.dart';
 import '../models/api_models.dart';
@@ -24,7 +25,17 @@ class WorkoutScreen extends StatefulWidget {
   /// instead of restarting at 0. Ignored if saved progress already exists.
   final Duration? resumeElapsed;
 
-  const WorkoutScreen({super.key, this.workout, this.resumeElapsed});
+  /// Set when this run is a resume of an ALREADY-LOGGED session (from the
+  /// dashboard). Finishing then updates that session in place instead of
+  /// creating a second, overlapping one that would double-count XP.
+  final String? resumeSessionId;
+
+  const WorkoutScreen({
+    super.key,
+    this.workout,
+    this.resumeElapsed,
+    this.resumeSessionId,
+  });
 
   @override
   State<WorkoutScreen> createState() => _WorkoutScreenState();
@@ -176,6 +187,66 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     _saveDebounce = Timer(const Duration(milliseconds: 600), _save);
   }
 
+  /// Column header labels for the sets table, per HYROX metric.
+  /// Returns (left, right); right is empty when there's only one column.
+  (String, String) _columnLabels(String? metric) {
+    switch (metric) {
+      case 'distance':
+        return (t('workout.col_meters'), '');
+      case 'pace':
+        return (t('workout.col_meters'), t('workout.col_pace'));
+      case 'distance_weight':
+        return (t('workout.col_meters'), 'KG');
+      case 'reps_weight':
+        return (t('workout.col_reps'), 'KG');
+      case 'time':
+        return (t('workout.col_time'), '');
+      default:
+        return (t('workout.col_reps'), 'KG');
+    }
+  }
+
+  Widget _setsHeader(String? metric) {
+    final (left, right) = _columnLabels(metric);
+    Widget label(String t) => Expanded(
+          child: Center(
+            child: Text(t,
+                style: const TextStyle(
+                    color: AppColors.muted, fontSize: 11, letterSpacing: 1.2)),
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          const SizedBox(
+              width: 28,
+              child: Text('#',
+                  style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600))),
+          label(left),
+          const SizedBox(width: 12),
+          label(right),
+          const SizedBox(width: 12),
+          const SizedBox(width: 26),
+        ],
+      ),
+    );
+  }
+
+  /// Serialise one set for the backend. Always carries kg/reps; includes the
+  /// HYROX metric fields only when present, and the done flag only for sessions.
+  Map<String, dynamic> _setPayload(WorkoutSet s, {bool done = false}) => {
+        'kg': s.kg,
+        'reps': s.reps,
+        if (done) 'done': s.done,
+        if (s.distanceM != null) 'distanceM': s.distanceM,
+        if (s.seconds != null) 'seconds': s.seconds,
+        if (s.targetKg != null) 'targetKg': s.targetKg,
+      };
+
   Future<void> _save() async {
     final id = workout.id;
     if (id == null) return;
@@ -193,10 +264,13 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                   'targetMuscles': e.targetMuscles,
                   'category': e.variant.isEmpty ? null : e.variant,
                   'progressionStrategy': e.progressionStrategy,
-                  // Persist weights/reps only — not the session's done flags.
-                  'sets': e.sets
-                      .map((s) => {'kg': s.kg, 'reps': s.reps})
-                      .toList(),
+                  // Round-trip HYROX metadata so a save doesn't strip stations.
+                  'metric': e.metric,
+                  'stationKey': e.stationKey,
+                  'note': e.note,
+                  // Persist weights/reps (+ HYROX metric fields) only — not the
+                  // session's done flags.
+                  'sets': e.sets.map(_setPayload).toList(),
                 })
             .toList(),
       );
@@ -231,6 +305,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     if (_exiting) return;
     _exiting = true;
     final nav = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     await _save();
     WorkoutSessionWithRank? created;
     if (asSession && workout.id != null) {
@@ -238,29 +313,54 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       final finishedAt = DateTime.now();
       final startedAt =
           finishedAt.subtract(Duration(seconds: _elapsedTotal));
+      final exercisesPayload = workout.exercises
+          .map((e) => {
+                'exerciseId': e.exerciseId,
+                'name': e.name,
+                'gifUrl': e.gifUrl,
+                'targetMuscles': e.targetMuscles,
+                'metric': e.metric,
+                'stationKey': e.stationKey,
+                'note': e.note,
+                'sets': e.sets.map((s) => _setPayload(s, done: true)).toList(),
+              })
+          .toList();
       try {
-        created = await _api.createSession(
-          trainingId: workout.id,
-          name: workout.name,
-          startedAt: startedAt,
-          finishedAt: finishedAt,
-          exercises: workout.exercises
-              .map((e) => {
-                    'exerciseId': e.exerciseId,
-                    'name': e.name,
-                    'gifUrl': e.gifUrl,
-                    'targetMuscles': e.targetMuscles,
-                    'sets': e.sets
-                        .map((s) =>
-                            {'kg': s.kg, 'reps': s.reps, 'done': s.done})
-                        .toList(),
-                  })
-              .toList(),
-        );
+        if (widget.resumeSessionId != null) {
+          // Resumed an already-logged session → update it in place. Creating a
+          // new one here produced a second overlapping session and re-awarded
+          // XP for sets that were already rewarded.
+          created = await _api.updateSession(
+            id: widget.resumeSessionId!,
+            finishedAt: finishedAt,
+            exercises: exercisesPayload,
+          );
+        } else {
+          created = await _api.createSession(
+            trainingId: workout.id,
+            name: workout.name,
+            startedAt: startedAt,
+            finishedAt: finishedAt,
+            exercises: exercisesPayload,
+          );
+        }
       } catch (_) {
-        // Don't block leaving if the log fails.
+        created = null;
       }
-      // Workout finished — drop the saved progress so re-opening starts fresh.
+      if (created == null) {
+        // The session save failed (offline / server error). Do NOT wipe the
+        // resumable progress — that would silently destroy the whole workout.
+        // Keep it, surface the failure, and let the user try Finish again.
+        _saveProgress();
+        _exiting = false;
+        if (mounted) {
+          messenger.showSnackBar(SnackBar(
+            content: Text(AppStrings.instance.t('workout.save_failed')),
+          ));
+        }
+        return;
+      }
+      // Saved successfully — only now is it safe to drop the local progress.
       if (workout.id != null) await WorkoutProgressStore.clear(workout.id!);
     } else if (workout.id != null) {
       // Left without finishing: keep the progress only if at least one set was
@@ -344,7 +444,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black87,
-      barrierLabel: 'Pihenő letelt',
+      barrierLabel: t('workout.rest_over'),
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (_, __, ___) => _restOverDialog(),
       transitionBuilder: (_, anim, __, child) => FadeTransition(
@@ -375,17 +475,17 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
               const Icon(Icons.timer_outlined,
                   color: AppColors.accentAmber, size: 88),
               const SizedBox(height: 28),
-              const Text('Pihenő letelt',
+              Text(t('workout.rest_over'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppColors.onSurface,
                       fontSize: 34,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5)),
               const SizedBox(height: 10),
-              const Text('Készülj a következő szettre',
+              Text(t('workout.rest_get_ready'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.muted, fontSize: 16)),
+                  style: const TextStyle(color: AppColors.muted, fontSize: 16)),
               const SizedBox(height: 40),
               GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
@@ -397,8 +497,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                     color: AppColors.accentAmber,
                     borderRadius: BorderRadius.circular(100),
                   ),
-                  child: const Text('Folytatás',
-                      style: TextStyle(
+                  child: Text(t('common.continue'),
+                      style: const TextStyle(
                           color: AppColors.background,
                           fontSize: 17,
                           fontWeight: FontWeight.w800)),
@@ -418,12 +518,12 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _sheet([
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 4),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('Pihenőidő',
-                style: TextStyle(
+            child: Text(t('workout.rest_time'),
+                style: const TextStyle(
                     color: AppColors.muted,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -505,15 +605,15 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _sheet([
-        _menuItem(Icons.check_circle_outline, 'Edzés befejezése', () {
+        _menuItem(Icons.check_circle_outline, t('workout.menu_finish'), () {
           Navigator.pop(ctx);
           _exit(asSession: true);
         }),
-        _menuItem(Icons.pause_circle_outline, 'Kilépés – később folytatom', () {
+        _menuItem(Icons.pause_circle_outline, t('workout.menu_pause'), () {
           Navigator.pop(ctx);
           _pauseAndExit(); // always keeps progress for the "continue" card
         }),
-        _menuItem(Icons.delete_outline, 'Edzés elvetése', () {
+        _menuItem(Icons.delete_outline, t('workout.menu_discard'), () {
           Navigator.pop(ctx);
           _discardAndExit();
         }, muted: true),
@@ -527,19 +627,19 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _sheet([
-        _menuItem(Icons.info_outline, 'Info', () {
+        _menuItem(Icons.info_outline, t('workout.menu_info'), () {
           Navigator.pop(ctx);
           _showInfo(ex);
         }),
-        _menuItem(Icons.trending_up, 'Progresszió', () {
+        _menuItem(Icons.trending_up, t('workout.menu_progression'), () {
           Navigator.pop(ctx);
           _showProgressionPicker(index, ex);
         }),
-        _menuItem(Icons.swap_horiz, 'Csere', () {
+        _menuItem(Icons.swap_horiz, t('workout.menu_change'), () {
           Navigator.pop(ctx);
           _changeExercise(index, ex);
         }),
-        _menuItem(Icons.delete_outline, 'Törlés', () {
+        _menuItem(Icons.delete_outline, t('common.delete'), () {
           Navigator.pop(ctx);
           _deleteExercise(index);
         }, muted: true),
@@ -602,24 +702,26 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   /// Per-exercise progression strategy picker. Persists immediately and
   /// re-fetches the hint so it reflects the new strategy.
   void _showProgressionPicker(int index, Exercise ex) {
+    // Tuple carries i18n KEYS; resolved with t() at build so the picker follows
+    // the app language instead of the previously-hardcoded Hungarian.
     const options = <(String, String, String)>[
-      ('linear', 'Lineáris', 'Minden alkalommal +súly'),
-      ('double-progression', 'Dupla progresszió', 'Előbb ismétlés, majd súly'),
-      ('rpe-based', 'RPE alapú', 'RPE 7–8 célzott terhelés'),
-      ('none', 'Nincs', 'Ne javasoljon semmit'),
+      ('linear', 'workout.strat_linear', 'workout.strat_linear_desc'),
+      ('double-progression', 'workout.strat_double', 'workout.strat_double_desc'),
+      ('rpe-based', 'workout.strat_rpe', 'workout.strat_rpe_desc'),
+      ('none', 'workout.strat_none', 'workout.strat_none_desc'),
     ];
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _sheet([
-        for (final (value, title, subtitle) in options)
+        for (final (value, titleKey, subtitleKey) in options)
           ListTile(
-            title: Text(title,
+            title: Text(t(titleKey),
                 style: const TextStyle(
                     color: AppColors.onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.w600)),
-            subtitle: Text(subtitle,
+            subtitle: Text(t(subtitleKey),
                 style: const TextStyle(color: AppColors.muted, fontSize: 13)),
             trailing: ex.progressionStrategy == value
                 ? const Icon(Icons.check, color: AppColors.onSurface)
@@ -880,16 +982,27 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                       style: const TextStyle(
                           fontSize: 15, color: AppColors.muted),
                     ),
+                    // HYROX coaching cue / target from the plan, if any.
+                    if (ex.note != null && ex.note!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        ex.note!,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.25,
+                            color: AppColors.accentAmber),
+                      ),
+                    ],
                   ],
                 ),
               ),
               GestureDetector(
                 onTap: () => _showInfo(ex),
                 behavior: HitTestBehavior.opaque,
-                child: const Padding(
-                  padding: EdgeInsets.only(left: 12, top: 4),
-                  child: Text('How to',
-                      style: TextStyle(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 4),
+                  child: Text(t('workout.how_to'),
+                      style: const TextStyle(
                           color: AppColors.muted,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -918,38 +1031,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
           _suggestionHint(ex),
 
-          // Sets table header.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              children: const [
-                SizedBox(
-                    width: 28,
-                    child: Text('#',
-                        style: TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600))),
-                Expanded(
-                    child: Center(
-                        child: Text('REPS',
-                            style: TextStyle(
-                                color: AppColors.muted,
-                                fontSize: 11,
-                                letterSpacing: 1.2)))),
-                SizedBox(width: 12),
-                Expanded(
-                    child: Center(
-                        child: Text('KG',
-                            style: TextStyle(
-                                color: AppColors.muted,
-                                fontSize: 11,
-                                letterSpacing: 1.2)))),
-                SizedBox(width: 12),
-                SizedBox(width: 26),
-              ],
-            ),
-          ),
+          // Sets table header — columns adapt to the exercise's metric.
+          _setsHeader(ex.metric),
           const SizedBox(height: 8),
 
           // Sets.
@@ -957,6 +1040,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                 key: ValueKey(e.value),
                 index: e.key,
                 set: e.value,
+                metric: ex.metric,
                 onChanged: _scheduleSave,
                 onPlateCalc: () => showPlateCalculator(context, e.value.kg),
                 onToggleDone: () {
@@ -1000,12 +1084,12 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.play_circle_outline,
+                children: [
+                  const Icon(Icons.play_circle_outline,
                       color: AppColors.onSurface, size: 20),
-                  SizedBox(width: 8),
-                  Text('Megnézés YouTube-on',
-                      style: TextStyle(
+                  const SizedBox(width: 8),
+                  Text(t('workout.watch_youtube'),
+                      style: const TextStyle(
                           color: AppColors.onSurface,
                           fontSize: 15,
                           fontWeight: FontWeight.w700)),
@@ -1086,8 +1170,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
           children: [
             const Icon(Icons.fitness_center, color: AppColors.muted, size: 44),
             const SizedBox(height: 12),
-            const Text('Nincs több gyakorlat',
-                style: TextStyle(color: AppColors.muted, fontSize: 16)),
+            Text(t('workout.no_more_exercises'),
+                style: const TextStyle(color: AppColors.muted, fontSize: 16)),
             const SizedBox(height: 20),
             TextButton(
               style: TextButton.styleFrom(
@@ -1099,8 +1183,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                     borderRadius: BorderRadius.circular(100)),
               ),
               onPressed: () => _exit(asSession: false),
-              child: const Text('Kilépés',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+              child: Text(t('workout.exit'),
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -1115,7 +1199,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 12),
       child: Text(
-        'Javasolt: ${s.label}',
+        '${t('workout.suggested')}: ${s.label}',
         style: const TextStyle(
           color: Color(0xFF3A3A3A),
           fontSize: 13,
@@ -1134,6 +1218,8 @@ String _formatKg(double kg) =>
 class _SetRow extends StatefulWidget {
   final int index;
   final WorkoutSet set;
+  // HYROX metric (null → classic strength) — picks the row layout.
+  final String? metric;
   final VoidCallback onToggleDone;
   final VoidCallback onChanged;
   final VoidCallback onPlateCalc;
@@ -1146,6 +1232,7 @@ class _SetRow extends StatefulWidget {
     required this.onToggleDone,
     required this.onChanged,
     required this.onPlateCalc,
+    this.metric,
     this.onRemove,
   });
 
@@ -1154,28 +1241,46 @@ class _SetRow extends StatefulWidget {
 }
 
 class _SetRowState extends State<_SetRow> {
-  late final TextEditingController _kg;
-  late final TextEditingController _reps;
+  // Strength rows use reps + kg pills. Station rows use a single editable
+  // "primary" pill (distance or reps); the other column is a read-only target.
+  TextEditingController? _kg;
+  TextEditingController? _reps;
+  TextEditingController? _primary;
+
+  String get _metric => widget.metric ?? 'reps';
+  bool get _isStrength => _metric == 'reps';
 
   @override
   void initState() {
     super.initState();
-    _kg = TextEditingController(
-        text: widget.set.kg == 0 ? '' : _formatKg(widget.set.kg));
-    _reps = TextEditingController(
-        text: widget.set.reps == 0 ? '' : '${widget.set.reps}');
+    if (_isStrength) {
+      _kg = TextEditingController(
+          text: widget.set.kg == 0 ? '' : _formatKg(widget.set.kg));
+      _reps = TextEditingController(
+          text: widget.set.reps == 0 ? '' : '${widget.set.reps}');
+    } else if (_metric == 'reps_weight') {
+      _primary = TextEditingController(
+          text: widget.set.reps == 0 ? '' : '${widget.set.reps}');
+    } else if (_metric == 'distance' ||
+        _metric == 'distance_weight' ||
+        _metric == 'pace') {
+      final d = widget.set.distanceM;
+      _primary =
+          TextEditingController(text: (d == null || d == 0) ? '' : _formatKg(d));
+    }
+    // metric == 'time': no editable field — just a read-only target + done.
   }
 
   @override
   void dispose() {
-    _kg.dispose();
-    _reps.dispose();
+    _kg?.dispose();
+    _reps?.dispose();
+    _primary?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final done = widget.set.done;
     return GestureDetector(
       onLongPress: widget.onRemove,
       behavior: HitTestBehavior.opaque,
@@ -1191,54 +1296,127 @@ class _SetRowState extends State<_SetRow> {
                       fontSize: 15,
                       fontWeight: FontWeight.w600)),
             ),
-            Expanded(
-              child: _pill(
-                controller: _reps,
-                hint: '0',
-                decimal: false,
-                onChanged: (v) {
-                  setState(() => widget.set.reps = int.tryParse(v) ?? 0);
-                  widget.onChanged();
-                },
-              ),
-            ),
+            ...(_isStrength ? _strengthSlots() : _stationSlots()),
             const SizedBox(width: 12),
-            Expanded(
-              child: _pill(
-                controller: _kg,
-                hint: 'BW',
-                decimal: true,
-                // Long-press the KG pill → plate calculator overlay.
-                onLongPress: widget.onPlateCalc,
-                onChanged: (v) {
-                  setState(() => widget.set.kg =
-                      double.tryParse(v.replaceAll(',', '.')) ?? 0);
-                  widget.onChanged();
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: widget.onToggleDone,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: done ? AppColors.accentAmber : Colors.transparent,
-                  border: Border.all(
-                    color: done ? AppColors.accentAmber : AppColors.surfaceHigh,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
+            _doneCircle(),
           ],
         ),
       ),
     );
   }
+
+  // [reps pill, gap, kg pill]
+  List<Widget> _strengthSlots() => [
+        Expanded(
+          child: _pill(
+            controller: _reps!,
+            hint: '0',
+            decimal: false,
+            onChanged: (v) {
+              setState(() => widget.set.reps = int.tryParse(v) ?? 0);
+              widget.onChanged();
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _pill(
+            controller: _kg!,
+            hint: 'BW',
+            decimal: true,
+            onLongPress: widget.onPlateCalc,
+            onChanged: (v) {
+              setState(() => widget.set.kg =
+                  double.tryParse(v.replaceAll(',', '.')) ?? 0);
+              widget.onChanged();
+            },
+          ),
+        ),
+      ];
+
+  // [primary pill/chip, gap, target chip] — depends on the station metric.
+  List<Widget> _stationSlots() {
+    final Widget left;
+    if (_metric == 'time') {
+      left = _targetChip(_fmtClock(widget.set.seconds));
+    } else if (_metric == 'reps_weight') {
+      left = _pill(
+        controller: _primary!,
+        hint: '0',
+        decimal: false,
+        onChanged: (v) {
+          setState(() => widget.set.reps = int.tryParse(v) ?? 0);
+          widget.onChanged();
+        },
+      );
+    } else {
+      // distance / distance_weight / pace → editable metres
+      left = _pill(
+        controller: _primary!,
+        hint: '0',
+        decimal: true,
+        onChanged: (v) {
+          setState(() =>
+              widget.set.distanceM = double.tryParse(v.replaceAll(',', '.')));
+          widget.onChanged();
+        },
+      );
+    }
+
+    final Widget right;
+    if (_metric == 'distance_weight' || _metric == 'reps_weight') {
+      right = widget.set.targetKg != null
+          ? _targetChip('${_formatKg(widget.set.targetKg!)} kg')
+          : const SizedBox();
+    } else if (_metric == 'pace') {
+      right = _targetChip(_fmtPace(widget.set.seconds));
+    } else {
+      right = const SizedBox();
+    }
+
+    return [Expanded(child: left), const SizedBox(width: 12), Expanded(child: right)];
+  }
+
+  Widget _doneCircle() => GestureDetector(
+        onTap: widget.onToggleDone,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.set.done ? AppColors.accentAmber : Colors.transparent,
+            border: Border.all(
+              color:
+                  widget.set.done ? AppColors.accentAmber : AppColors.surfaceHigh,
+              width: 2,
+            ),
+          ),
+        ),
+      );
+
+  // Read-only target (distance load, pace, or planned time).
+  Widget _targetChip(String text) => Container(
+        height: 46,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLow,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(text,
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted)),
+      );
+
+  String _fmtClock(int? secs) {
+    if (secs == null || secs <= 0) return '–';
+    final m = secs ~/ 60;
+    final s = secs % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  String _fmtPace(int? secsPerKm) =>
+      (secsPerKm == null || secsPerKm <= 0) ? '–' : '${_fmtClock(secsPerKm)}/km';
 
   Widget _pill({
     required TextEditingController controller,

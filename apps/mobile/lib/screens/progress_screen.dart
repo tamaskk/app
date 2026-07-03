@@ -40,9 +40,16 @@ String _fmtVolume(double kg) {
   return '${kg.round()} kg';
 }
 
-/// Total volume across all sets in a session.
+/// Total volume across the COMPLETED sets in a session. Skipped (unchecked)
+/// sets still carry their pre-filled kg×reps, so counting them inflated the
+/// reported volume for any workout finished before every set was ticked.
 double _sessionVolume(WorkoutSession s) => s.exercises.fold<double>(
-    0, (a, e) => a + e.sets.fold<double>(0, (b, x) => b + x.kg * x.reps));
+    0,
+    (a, e) =>
+        a +
+        e.sets
+            .where((x) => x.done)
+            .fold<double>(0, (b, x) => b + x.kg * x.reps));
 
 /// Compact wall-clock-style minutes label for stat hero (8h 12m / 47p).
 String _fmtMinutesH(int minutes) {
@@ -193,17 +200,22 @@ class ExerciseHistory {
 const _metrics = ['1RM', 'Max Weight', 'Volume', 'Total Reps'];
 
 double _metricValue(String metric, List<SavedSet> sets) {
+  // Only completed sets count — an unchecked planned set carries pre-filled
+  // (or auto-progression) kg×reps that was never actually lifted, which would
+  // otherwise spike Max Weight / 1RM to a weight the user never hit and inflate
+  // Volume / Total Reps. Matches the PR badge, which already filters on done.
+  final done = sets.where((s) => s.done);
   switch (metric) {
     case 'Max Weight':
-      return sets.fold(0.0, (a, s) => max(a, s.kg));
+      return done.fold(0.0, (a, s) => max(a, s.kg));
     case 'Volume':
-      return sets.fold(0.0, (a, s) => a + s.kg * s.reps);
+      return done.fold(0.0, (a, s) => a + s.kg * s.reps);
     case 'Total Reps':
-      return sets.fold(0.0, (a, s) => a + s.reps);
+      return done.fold(0.0, (a, s) => a + s.reps);
     case '1RM':
     default:
       // Epley estimate; best set wins.
-      return sets.fold(0.0, (a, s) => max(a, s.kg * (1 + s.reps / 30.0)));
+      return done.fold(0.0, (a, s) => max(a, s.kg * (1 + s.reps / 30.0)));
   }
 }
 

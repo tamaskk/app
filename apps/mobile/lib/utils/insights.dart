@@ -1,4 +1,5 @@
 import '../models/api_models.dart';
+import '../i18n/app_strings.dart';
 
 /// One-liner observations the calendar surfaces under "MEGFIGYELÉSEK".
 /// Each is a short uppercase string ready to render in a monochrome chip.
@@ -29,15 +30,10 @@ class SmartInsights {
       typicalDuration != null;
 }
 
-const _dayNames = [
-  'HÉTFŐN',
-  'KEDDEN',
-  'SZERDÁN',
-  'CSÜTÖRTÖKÖN',
-  'PÉNTEKEN',
-  'SZOMBATON',
-  'VASÁRNAP',
-];
+/// Localized weekday name (1 = Monday … 7 = Sunday) in the form used inside
+/// the insight sentences — Hungarian uses the superessive case ("PÉNTEKEN"),
+/// English the plain uppercase day ("FRIDAY").
+String _dayName(int weekday) => t('insights.day.$weekday');
 
 /// Compute the calendar insight chips from completed sessions. Requires
 /// at least 4 sessions before any insight is surfaced — below that the data
@@ -74,12 +70,13 @@ SmartInsights computeInsights(List<WorkoutSession> sessions) {
     // Require the top day to account for at least 30% of sessions so we don't
     // overclaim on a 1-vs-1 plurality.
     if (top.value / dated.length >= 0.3) {
-      mostCommon =
-          '${_dayNames[top.key - 1]} EDZESZ LEGTÖBBET (${top.value} ALKALOM)';
+      mostCommon = tFmt('insights.most_common_day',
+          {'day': _dayName(top.key), 'count': top.value});
     }
     final bottom = sorted.last;
     if (bottom.value <= 1 && sorted.length >= 4) {
-      leastCommon = '${_dayNames[bottom.key - 1]} A LEGRITKÁBB';
+      leastCommon =
+          tFmt('insights.least_common_day', {'day': _dayName(bottom.key)});
     }
   }
 
@@ -93,7 +90,7 @@ SmartInsights computeInsights(List<WorkoutSession> sessions) {
             .round();
     final hh = avgHour.toString().padLeft(2, '0');
     final mm = avgMin.toString().padLeft(2, '0');
-    startTime = 'ÁTLAGOSAN $hh:$mm-KOR KEZDESZ';
+    startTime = tFmt('insights.avg_start', {'time': '$hh:$mm'});
   }
 
   String? duration;
@@ -101,7 +98,7 @@ SmartInsights computeInsights(List<WorkoutSession> sessions) {
     final avg =
         (durationSamples.fold<int>(0, (a, b) => a + b) / durationSamples.length)
             .round();
-    duration = 'ÁTLAG SESSION: $avg PERC';
+    duration = tFmt('insights.avg_duration', {'min': avg});
   }
 
   return SmartInsights(
@@ -150,23 +147,23 @@ List<MonthHighlight> computeMonthHighlights(
 
   if (topVolume != null && topVolumeKg > 0) {
     highlights.add(MonthHighlight(
-      'LEGNAGYOBB SESSION',
+      t('insights.hl_biggest_session'),
       '${_shortName(topVolume.name)} · ${volumeFormatter(topVolumeKg)}',
     ));
   }
   if (topSets != null && topSetCount > 0) {
     highlights.add(MonthHighlight(
-      'LEGTÖBB SETT',
-      '${_shortName(topSets.name)} · $topSetCount SET',
+      t('insights.hl_most_sets'),
+      '${_shortName(topSets.name)} · ${tFmt('insights.sets_count', {'n': topSetCount})}',
     ));
   }
   if (prCount > 0) {
-    highlights.add(MonthHighlight('ÚJ PR-OK', '$prCount'));
+    highlights.add(MonthHighlight(t('insights.hl_new_prs'), '$prCount'));
   }
   return highlights;
 }
 
 String _shortName(String s) {
-  if (s.trim().isEmpty) return 'EDZÉS';
+  if (s.trim().isEmpty) return t('insights.workout_fallback');
   return s.trim().toUpperCase();
 }

@@ -52,6 +52,7 @@ class AuthUser {
       );
 
   AuthUser copyWith({
+    String? name,
     int? xp,
     int? rank,
     String? username,
@@ -62,7 +63,7 @@ class AuthUser {
       AuthUser(
         id: id,
         email: email,
-        name: name,
+        name: name ?? this.name,
         onboarding: onboarding,
         xp: xp ?? this.xp,
         rank: rank ?? this.rank,

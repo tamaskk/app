@@ -38,10 +38,17 @@ class ApiExercise {
         exerciseId: json['exerciseId']?.toString() ?? '',
         name: _localizedString(json['name']),
         gifUrl: json['gifUrl'] as String? ?? '',
-        targetMuscles: _localizedList(json['targetMuscles']),
-        bodyParts: _localizedList(json['bodyParts']),
-        equipments: _localizedList(json['equipments']),
-        secondaryMuscles: _localizedList(json['secondaryMuscles']),
+        // Muscle / body-part / equipment values are catalogue KEYS that feed
+        // back into API filter queries (the backend matches the English
+        // ExerciseDB vocabulary). Resolve them to English, NOT the UI language —
+        // otherwise, in Hungarian, targetMuscles became e.g. "mellizmok" and the
+        // replace-exercise picker (which pre-selects targetMuscles.first as a
+        // filter) opened empty because no catalogue row matches that string.
+        targetMuscles: _localizedListEn(json['targetMuscles']),
+        bodyParts: _localizedListEn(json['bodyParts']),
+        equipments: _localizedListEn(json['equipments']),
+        secondaryMuscles: _localizedListEn(json['secondaryMuscles']),
+        // Instructions are display prose → follow the user's language.
         instructions: _localizedList(json['instructions']),
       );
 
@@ -101,6 +108,36 @@ String _pickLang(List<dynamic> group) {
     if (l == 'en') en = v;
   }
   return en ?? first ?? '';
+}
+
+/// English-only resolver for fields used as stable catalogue keys. Always
+/// prefers the English entry regardless of the UI language, so the value can be
+/// used verbatim as an API filter key.
+String _pickEn(List<dynamic> group) {
+  String? first;
+  for (final e in group) {
+    if (e is! Map) continue;
+    final v = e['value']?.toString();
+    first ??= v;
+    if (e['lng']?.toString() == 'en') return v ?? '';
+  }
+  return first ?? '';
+}
+
+/// Like [_localizedList] but resolves localized groups to English (for
+/// muscle/body-part/equipment keys that must match the catalogue vocabulary).
+List<String> _localizedListEn(dynamic value) {
+  if (value is! List) return const [];
+  if (_isLocalizedGroup(value)) {
+    final s = _pickEn(value);
+    return s.isEmpty ? const [] : [s];
+  }
+  return value
+      .map((e) => e is String
+          ? e
+          : (e is List ? _pickEn(e) : (e is Map ? e['value']?.toString() ?? '' : e?.toString() ?? '')))
+      .where((s) => s.isNotEmpty)
+      .toList();
 }
 
 /// Resolve a scalar text field that may be a plain String or a localized group.

@@ -170,9 +170,18 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
                   gifUrl: e.gifUrl,
                   targetMuscles: e.targetMuscles,
                   progressionStrategy: e.progressionStrategy,
+                  metric: e.metric,
+                  stationKey: e.stationKey,
+                  note: e.note,
                   sets: e.sets
-                      .map((s) =>
-                          WorkoutSet(kg: s.kg, reps: s.reps, done: s.done))
+                      .map((s) => WorkoutSet(
+                            kg: s.kg,
+                            reps: s.reps,
+                            done: s.done,
+                            distanceM: s.distanceM,
+                            seconds: s.seconds,
+                            targetKg: s.targetKg,
+                          ))
                       .toList(),
                 ))
             .toList(),

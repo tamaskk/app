@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../i18n/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../models/onboarding_data.dart';
 import '../utils/optimal_volume.dart';
@@ -97,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     String? subtitle,
     required Widget body,
     required bool canContinue,
-    String continueLabel = 'Tovább',
+    String? continueLabel,
     bool centerBody = false,
     bool showContinueButton = true,
   }) {
@@ -155,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       borderRadius: BorderRadius.circular(100)),
                 ),
                 onPressed: canContinue ? _next : null,
-                child: Text(continueLabel,
+                child: Text(continueLabel ?? t('common.next'),
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 16)),
               ),
@@ -269,38 +270,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // --- steps ----------------------------------------------------------------
 
   Widget _goalStep() => _scaffold(
-        title: 'Mi a célod?',
-        subtitle: 'Erre szabjuk a programot.',
+        title: t('onboarding.goal_title'),
+        subtitle: t('onboarding.goal_subtitle'),
         canContinue: _data.goal != null,
         showContinueButton: false,
         body: Column(children: [
           _optionCard(
-              title: 'Fogyás',
-              subtitle: 'Tartsd meg az izmot deficit alatt',
+              title: t('onboarding.goal_lose_fat'),
+              subtitle: t('onboarding.goal_lose_fat_sub'),
               selected: _data.goal == 'lose_fat',
               onTap: () {
                 setState(() => _data.goal = 'lose_fat');
                 _autoAdvance();
               }),
           _optionCard(
-              title: 'Izomépítés',
-              subtitle: 'Maximális hipertrófia',
+              title: t('onboarding.goal_build_muscle'),
+              subtitle: t('onboarding.goal_build_muscle_sub'),
               selected: _data.goal == 'build_muscle',
               onTap: () {
                 setState(() => _data.goal = 'build_muscle');
                 _autoAdvance();
               }),
           _optionCard(
-              title: 'Erő és teljesítmény',
-              subtitle: 'Növeld az 1RM-et a fő gyakorlatokon',
+              title: t('onboarding.goal_strength'),
+              subtitle: t('onboarding.goal_strength_sub'),
               selected: _data.goal == 'strength',
               onTap: () {
                 setState(() => _data.goal = 'strength');
                 _autoAdvance();
               }),
           _optionCard(
-              title: 'Fenntartás',
-              subtitle: 'Tartsd az izmot, javítsd az összképet',
+              title: t('onboarding.goal_maintain'),
+              subtitle: t('onboarding.goal_maintain_sub'),
               selected: _data.goal == 'maintain',
               onTap: () {
                 setState(() => _data.goal = 'maintain');
@@ -310,38 +311,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
 
   Widget _experienceStep() => _scaffold(
-        title: 'Mennyi a tapasztalatod?',
-        subtitle: 'Mióta edzel rendszeresen?',
+        title: t('onboarding.exp_title'),
+        subtitle: t('onboarding.exp_subtitle'),
         canContinue: _data.experience != null,
         showContinueButton: false,
         body: Column(children: [
           _optionCard(
-              title: 'Kezdő',
-              subtitle: 'Kevesebb mint 1 év',
+              title: t('onboarding.exp_beginner'),
+              subtitle: t('onboarding.exp_beginner_sub'),
               selected: _data.experience == 'beginner',
               onTap: () {
                 setState(() => _data.experience = 'beginner');
                 _autoAdvance();
               }),
           _optionCard(
-              title: 'Haladó',
-              subtitle: '1–3 év',
+              title: t('onboarding.exp_intermediate'),
+              subtitle: t('onboarding.exp_intermediate_sub'),
               selected: _data.experience == 'intermediate',
               onTap: () {
                 setState(() => _data.experience = 'intermediate');
                 _autoAdvance();
               }),
           _optionCard(
-              title: 'Tapasztalt',
-              subtitle: '3+ év',
+              title: t('onboarding.exp_advanced'),
+              subtitle: t('onboarding.exp_advanced_sub'),
               selected: _data.experience == 'advanced',
               onTap: () {
                 setState(() => _data.experience = 'advanced');
                 _autoAdvance();
               }),
           _optionCard(
-              title: 'Elit',
-              subtitle: '5+ év, edzői tudás',
+              title: t('onboarding.exp_elite'),
+              subtitle: t('onboarding.exp_elite_sub'),
               selected: _data.experience == 'elite',
               onTap: () {
                 setState(() => _data.experience = 'elite');
@@ -357,20 +358,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ? (_data.weightKg * 2.20462).round()
         : _data.weightKg.round();
     return _scaffold(
-      title: 'Pár adat rólad',
-      subtitle: 'Ezekre szabjuk a heti volument.',
+      title: t('onboarding.body_title'),
+      subtitle: t('onboarding.body_subtitle'),
       canContinue: canContinue,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionLabel('Nem'),
+          _sectionLabel(t('onboarding.gender')),
           const SizedBox(height: 10),
           _chipRow([
-            _ChipOption('Férfi', _data.gender == 'male',
+            _ChipOption(t('onboarding.gender_male'), _data.gender == 'male',
                 () => setState(() => _data.gender = 'male')),
-            _ChipOption('Nő', _data.gender == 'female',
+            _ChipOption(t('onboarding.gender_female'), _data.gender == 'female',
                 () => setState(() => _data.gender = 'female')),
-            _ChipOption('Egyéb', _data.gender == 'other',
+            _ChipOption(t('onboarding.gender_other'), _data.gender == 'other',
                 () => setState(() => _data.gender = 'other')),
           ]),
           const SizedBox(height: 28),
@@ -378,7 +379,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              _sectionLabel('Életkor'),
+              _sectionLabel(t('onboarding.age')),
               const Spacer(),
               Text('${_data.age}',
                   style: const TextStyle(
@@ -386,8 +387,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       fontWeight: FontWeight.w800,
                       color: AppColors.onSurface)),
               const SizedBox(width: 4),
-              const Text('év',
-                  style: TextStyle(fontSize: 14, color: AppColors.muted)),
+              Text(t('onboarding.years_unit'),
+                  style: const TextStyle(fontSize: 14, color: AppColors.muted)),
             ],
           ),
           _whiteSlider(
@@ -401,7 +402,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              _sectionLabel('Testsúly'),
+              _sectionLabel(t('onboarding.weight')),
               const Spacer(),
               Text('$display',
                   style: const TextStyle(
@@ -431,16 +432,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             onChanged: (v) => setState(() => _data.weightKg = v),
           ),
           const SizedBox(height: 28),
-          _sectionLabel('Cardio mennyiség'),
+          _sectionLabel(t('onboarding.cardio')),
           const SizedBox(height: 10),
           _chipRow([
-            _ChipOption('Semmi', _data.cardio == 'none',
+            _ChipOption(t('onboarding.cardio_none'), _data.cardio == 'none',
                 () => setState(() => _data.cardio = 'none')),
-            _ChipOption('Kevés', _data.cardio == 'light',
+            _ChipOption(t('onboarding.cardio_light'), _data.cardio == 'light',
                 () => setState(() => _data.cardio = 'light')),
-            _ChipOption('Közepes', _data.cardio == 'moderate',
+            _ChipOption(t('onboarding.cardio_moderate'),
+                _data.cardio == 'moderate',
                 () => setState(() => _data.cardio = 'moderate')),
-            _ChipOption('Sok', _data.cardio == 'high',
+            _ChipOption(t('onboarding.cardio_high'), _data.cardio == 'high',
                 () => setState(() => _data.cardio = 'high')),
           ]),
           const SizedBox(height: 12),
@@ -452,13 +454,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _scheduleStep() {
     final optimal = recommendedDaysPerWeek(_data.experience);
     return _scaffold(
-      title: 'Heti ritmusod',
-      subtitle: 'Hány nap edzés, mennyi időre?',
+      title: t('onboarding.schedule_title'),
+      subtitle: t('onboarding.schedule_subtitle'),
       canContinue: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionLabel('Edzésnap / hét'),
+          _sectionLabel(t('onboarding.days_per_week')),
           const SizedBox(height: 16),
           Center(
             child: Row(
@@ -490,10 +492,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Center(
             child: Text(
               _data.daysPerWeek == optimal
-                  ? 'OPTIMÁLIS A SZINTEDHEZ'
+                  ? t('onboarding.days_optimal')
                   : (_data.daysPerWeek > 5
-                      ? 'A regenerálás határán'
-                      : 'Megfelelő'),
+                      ? t('onboarding.days_recovery_edge')
+                      : t('onboarding.days_fine')),
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -503,7 +505,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           const SizedBox(height: 28),
-          _sectionLabel('Egy edzés hossza'),
+          _sectionLabel(t('onboarding.session_length')),
           const SizedBox(height: 10),
           _chipRow([
             _ChipOption('30 min', _data.sessionDuration == 30,
@@ -525,32 +527,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _splitStep() {
     final recommended = _recommendedSplit();
     return _scaffold(
-      title: 'Edzésfelosztás',
-      subtitle: 'Hogyan szervezzük a heteket?',
+      title: t('onboarding.split_title'),
+      subtitle: t('onboarding.split_subtitle'),
       canContinue: _data.split != null,
       body: Column(children: [
         _optionCard(
             title: 'Full Body',
-            subtitle: 'Minden izom minden nap, magas frekvencia',
-            badge: recommended == 'full_body' ? 'AJÁNLOTT' : null,
+            subtitle: t('onboarding.split_full_body_sub'),
+            badge: recommended == 'full_body'
+                ? t('onboarding.recommended')
+                : null,
             selected: _data.split == 'full_body',
             onTap: () => setState(() => _data.split = 'full_body')),
         _optionCard(
             title: 'Upper / Lower',
-            subtitle: 'Felső- és alsótest külön napokon',
-            badge: recommended == 'upper_lower' ? 'AJÁNLOTT' : null,
+            subtitle: t('onboarding.split_upper_lower_sub'),
+            badge: recommended == 'upper_lower'
+                ? t('onboarding.recommended')
+                : null,
             selected: _data.split == 'upper_lower',
             onTap: () => setState(() => _data.split = 'upper_lower')),
         _optionCard(
             title: 'Push / Pull / Legs',
-            subtitle: 'Tolás, húzás, láb külön napokon',
-            badge: recommended == 'push_pull_legs' ? 'AJÁNLOTT' : null,
+            subtitle: t('onboarding.split_ppl_sub'),
+            badge: recommended == 'push_pull_legs'
+                ? t('onboarding.recommended')
+                : null,
             selected: _data.split == 'push_pull_legs',
             onTap: () => setState(() => _data.split = 'push_pull_legs')),
         _optionCard(
             title: 'Bro split',
-            subtitle: 'Egy izomcsoport / nap, 5–6 napos hét',
-            badge: recommended == 'bro' ? 'AJÁNLOTT' : null,
+            subtitle: t('onboarding.split_bro_sub'),
+            badge: recommended == 'bro' ? t('onboarding.recommended') : null,
             selected: _data.split == 'bro',
             onTap: () => setState(() => _data.split = 'bro')),
       ]),
@@ -571,10 +579,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _data.optimalVolume = optimalWeeklyVolume(_data);
     }
     return _scaffold(
-      title: 'A heti optimumod',
-      subtitle: 'Ennyi munka-szett izomcsoportonként ad ideális eredményt.',
+      title: t('onboarding.volume_title'),
+      subtitle: t('onboarding.volume_subtitle'),
       canContinue: true,
-      continueLabel: 'Mentsd a tervemet',
+      continueLabel: t('onboarding.save_plan'),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -594,11 +602,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             },
           ),
           const SizedBox(height: 4),
-          const Text('szett / izom / hét',
-              style: TextStyle(fontSize: 15, color: AppColors.muted)),
+          Text(t('onboarding.volume_unit'),
+              style: const TextStyle(fontSize: 15, color: AppColors.muted)),
           const SizedBox(height: 8),
-          const Text('RP MEV / MAV alapján',
-              style: TextStyle(
+          Text(t('onboarding.volume_source'),
+              style: const TextStyle(
                   fontSize: 11,
                   letterSpacing: 1.4,
                   color: AppColors.muted,
@@ -618,8 +626,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 }
               }, small: true),
               const SizedBox(width: 16),
-              const Text('Hangold',
-                  style: TextStyle(
+              Text(t('onboarding.fine_tune'),
+                  style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.muted,
                       fontWeight: FontWeight.w700,
@@ -638,11 +646,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           GestureDetector(
             onTap: _openDemoWorkout,
             behavior: HitTestBehavior.opaque,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
-                'Próbálj egy szettet előbb →',
-                style: TextStyle(
+                t('onboarding.try_a_set'),
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.onSurface,
                   fontWeight: FontWeight.w700,

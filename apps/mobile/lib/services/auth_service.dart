@@ -326,7 +326,16 @@ class AuthService {
   /// Update the display name.
   Future<AuthUser> updateProfile({required String name}) async {
     final data = await _patchMe({'name': name});
-    _user = AuthUser.fromJson(data['user'] as Map<String, dynamic>);
+    final returnedName =
+        (data['user'] as Map<String, dynamic>?)?['name'] as String? ?? name;
+    // Merge only the changed field. The PATCH /api/auth/me response is a slim
+    // {id,email,name} projection, so rebuilding _user from it wiped the cached
+    // subscription, xp, rank, weekly plan and reminders — making a Pro user
+    // look free and zeroing their stats until the next full session restore.
+    final current = _user;
+    _user = current != null
+        ? current.copyWith(name: returnedName)
+        : AuthUser.fromJson(data['user'] as Map<String, dynamic>);
     return _user!;
   }
 

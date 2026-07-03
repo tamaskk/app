@@ -81,6 +81,11 @@ class SavedTraining {
   // Optional plan grouping (only on generated trainings).
   final int? weekIndex;
   final int? dayIndex;
+  // Discipline: "strength" (regular Edzések) or "hyrox" (HYROX plan). Drives
+  // which tab the training belongs to.
+  final String discipline;
+  // HYROX 12-week phase (1–4), only set on hyrox trainings.
+  final int? phase;
 
   SavedTraining({
     required this.id,
@@ -90,6 +95,8 @@ class SavedTraining {
     this.doneAt,
     this.weekIndex,
     this.dayIndex,
+    this.discipline = 'strength',
+    this.phase,
   });
 
   factory SavedTraining.fromJson(Map<String, dynamic> json) => SavedTraining(
@@ -102,11 +109,14 @@ class SavedTraining {
         doneAt: _parseTrainingDate(json['doneAt']),
         weekIndex: (json['weekIndex'] as num?)?.toInt(),
         dayIndex: (json['dayIndex'] as num?)?.toInt(),
+        discipline: json['discipline'] as String? ?? 'strength',
+        phase: (json['phase'] as num?)?.toInt(),
       );
 
   int get totalSets => exercises.fold(0, (a, e) => a + e.sets.length);
   bool get isGenerated => source == 'generated';
   bool get isDone => doneAt != null;
+  bool get isHyrox => discipline == 'hyrox';
 }
 
 DateTime? _parseTrainingDate(dynamic v) =>
@@ -119,6 +129,10 @@ class SavedExercise {
   final String gifUrl;
   final List<String> targetMuscles;
   final String progressionStrategy;
+  // HYROX metric (null → classic strength). See lib/hyroxMetrics on the backend.
+  final String? metric;
+  final String? stationKey;
+  final String? note;
   final List<SavedSet> sets;
 
   SavedExercise({
@@ -128,6 +142,9 @@ class SavedExercise {
     this.gifUrl = '',
     this.targetMuscles = const [],
     this.progressionStrategy = 'linear',
+    this.metric,
+    this.stationKey,
+    this.note,
     required this.sets,
   });
 
@@ -139,6 +156,9 @@ class SavedExercise {
         targetMuscles: _stringList(json['targetMuscles']),
         progressionStrategy:
             json['progressionStrategy'] as String? ?? 'linear',
+        metric: json['metric'] as String?,
+        stationKey: json['stationKey'] as String?,
+        note: json['note'] as String?,
         sets: ((json['sets'] as List?) ?? [])
             .map((e) => SavedSet.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -186,13 +206,27 @@ class SavedSet {
   final double kg;
   final int reps;
   final bool done;
+  // HYROX metric fields (null for ordinary strength sets).
+  final double? distanceM;
+  final int? seconds;
+  final double? targetKg;
 
-  SavedSet({required this.kg, required this.reps, this.done = false});
+  SavedSet({
+    required this.kg,
+    required this.reps,
+    this.done = false,
+    this.distanceM,
+    this.seconds,
+    this.targetKg,
+  });
 
   factory SavedSet.fromJson(Map<String, dynamic> json) => SavedSet(
         kg: (json['kg'] as num?)?.toDouble() ?? 0,
         reps: (json['reps'] as num?)?.toInt() ?? 0,
         done: json['done'] as bool? ?? false,
+        distanceM: (json['distanceM'] as num?)?.toDouble(),
+        seconds: (json['seconds'] as num?)?.toInt(),
+        targetKg: (json['targetKg'] as num?)?.toDouble(),
       );
 }
 

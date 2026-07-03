@@ -11,19 +11,24 @@ int weeklyStreak(List<DateTime> workoutDates) {
   final weeks =
       workoutDates.map((d) => _weekStart(d).millisecondsSinceEpoch).toSet();
   final current = _weekStart(DateTime.now());
+  // Previous week's Monday, re-anchored to local midnight. Subtracting a raw
+  // 168h Duration drifts by ±1h across a DST transition (a week is 167h or
+  // 169h then), so the epoch stops matching the stored week-start; wrapping in
+  // _weekStart snaps it back to Monday 00:00.
+  final lastWeek = _weekStart(current.subtract(const Duration(days: 7)));
   DateTime cursor;
   if (weeks.contains(current.millisecondsSinceEpoch)) {
     cursor = current;
-  } else if (weeks.contains(
-      current.subtract(const Duration(days: 7)).millisecondsSinceEpoch)) {
-    cursor = current.subtract(const Duration(days: 7));
+  } else if (weeks.contains(lastWeek.millisecondsSinceEpoch)) {
+    cursor = lastWeek;
   } else {
     return 0; // streak broken
   }
   var streak = 0;
   while (weeks.contains(cursor.millisecondsSinceEpoch)) {
     streak++;
-    cursor = cursor.subtract(const Duration(days: 7));
+    // Step back a full week, re-anchoring to Monday midnight (see note above).
+    cursor = _weekStart(cursor.subtract(const Duration(days: 7)));
   }
   return streak;
 }
@@ -42,7 +47,12 @@ int allTimeBestStreak(List<DateTime> workoutDates) {
   for (var i = 1; i < weeks.length; i++) {
     final prev = DateTime.fromMillisecondsSinceEpoch(weeks[i - 1]);
     final curr = DateTime.fromMillisecondsSinceEpoch(weeks[i]);
-    if (curr.difference(prev).inDays == 7) {
+    // Two week-starts are consecutive iff stepping prev forward one week (again
+    // re-anchored to Monday midnight) lands exactly on curr. Using
+    // difference().inDays == 7 mis-fired across DST, where the gap between
+    // consecutive Monday midnights is 167h or 169h → inDays 6 or 7.
+    final expectedNext = _weekStart(prev.add(const Duration(days: 7)));
+    if (curr.millisecondsSinceEpoch == expectedNext.millisecondsSinceEpoch) {
       run++;
       if (run > best) best = run;
     } else {

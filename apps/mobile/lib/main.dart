@@ -8,6 +8,7 @@ import 'services/notification_service.dart';
 import 'services/plate_settings.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/trainings_list_screen.dart';
+import 'screens/hyrox_screen.dart';
 import 'screens/progress_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/login_screen.dart';
@@ -287,6 +288,7 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
     final screens = [
       DashboardScreen(auth: widget.auth, onLogout: widget.onLogout),
       TrainingsListScreen(auth: widget.auth),
+      HyroxScreen(auth: widget.auth),
       const ProgressScreen(),
       CalendarScreen(auth: widget.auth),
     ];
@@ -309,6 +311,7 @@ class _BottomNav extends StatelessWidget {
   static const _items = [
     (Icons.home_outlined, Icons.home),
     (Icons.fitness_center_outlined, Icons.fitness_center),
+    (Icons.sports_score_outlined, Icons.sports_score),
     (Icons.trending_up_outlined, Icons.trending_up),
     (Icons.calendar_today_outlined, Icons.calendar_today),
   ];

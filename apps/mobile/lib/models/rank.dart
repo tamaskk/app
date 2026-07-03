@@ -20,11 +20,16 @@ class RankDef {
     required this.threshold,
   });
 
+  // Null-safe: the leaderboard payload embeds only {tier, name, numeral} per
+  // entry (no threshold), so a hard `as num` cast on threshold threw a
+  // TypeError for every row and left the whole board stuck on its error state.
+  // threshold is only needed for the account rank-progress bar (that endpoint
+  // does send it); absent, 0 is a harmless default.
   factory RankDef.fromJson(Map<String, dynamic> json) => RankDef(
-        tier: (json['tier'] as num).toInt(),
-        name: json['name'] as String,
-        numeral: json['numeral'] as String,
-        threshold: (json['threshold'] as num).toInt(),
+        tier: (json['tier'] as num?)?.toInt() ?? 1,
+        name: json['name'] as String? ?? '',
+        numeral: json['numeral'] as String? ?? '',
+        threshold: (json['threshold'] as num?)?.toInt() ?? 0,
       );
 }
 

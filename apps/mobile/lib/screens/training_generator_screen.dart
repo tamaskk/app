@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../i18n/app_strings.dart';
 import '../models/auth.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
@@ -15,25 +16,25 @@ class TrainingGeneratorScreen extends StatefulWidget {
       _TrainingGeneratorScreenState();
 }
 
-// Hungarian display labels keep the brutalist tone — match the backend
-// muscle keys exactly so the POST body is the same vocabulary.
+// `key` is the backend muscle vocabulary (sent verbatim in the POST body);
+// `labelKey` is an i18n key resolved to the display label at build time.
 const _muscleOptions = <_MuscleOption>[
-  _MuscleOption('chest', 'MELL'),
-  _MuscleOption('back', 'HÁT'),
-  _MuscleOption('shoulders', 'VÁLL'),
-  _MuscleOption('biceps', 'BICEPSZ'),
-  _MuscleOption('triceps', 'TRICEPSZ'),
-  _MuscleOption('quads', 'COMB'),
-  _MuscleOption('hamstrings', 'COMBHAJLÍTÓ'),
-  _MuscleOption('glutes', 'FAR'),
-  _MuscleOption('calves', 'VÁDLI'),
-  _MuscleOption('abs', 'HAS'),
+  _MuscleOption('chest', 'generator.muscle_chest'),
+  _MuscleOption('back', 'generator.muscle_back'),
+  _MuscleOption('shoulders', 'generator.muscle_shoulders'),
+  _MuscleOption('biceps', 'generator.muscle_biceps'),
+  _MuscleOption('triceps', 'generator.muscle_triceps'),
+  _MuscleOption('quads', 'generator.muscle_quads'),
+  _MuscleOption('hamstrings', 'generator.muscle_hamstrings'),
+  _MuscleOption('glutes', 'generator.muscle_glutes'),
+  _MuscleOption('calves', 'generator.muscle_calves'),
+  _MuscleOption('abs', 'generator.muscle_abs'),
 ];
 
 class _MuscleOption {
   final String key;
-  final String label;
-  const _MuscleOption(this.key, this.label);
+  final String labelKey;
+  const _MuscleOption(this.key, this.labelKey);
 }
 
 class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
@@ -69,7 +70,8 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
       if (!mounted) return;
       final created = (res['created'] as num?)?.toInt() ?? 0;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$created edzés generálva.')),
+        SnackBar(
+            content: Text(tFmt('generator.generated_snack', {'count': created}))),
       );
       Navigator.of(context).pop(true);
     } on AuthException catch (e) {
@@ -77,7 +79,7 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
       setState(() => _error = e.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Hálózati hiba. Próbáld újra.');
+      setState(() => _error = t('generator.network_error'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -138,7 +140,7 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
                           ),
                         )
                       : Text(
-                          'GENERÁLD A($_totalSessions) EDZÉST',
+                          tFmt('generator.cta', {'count': _totalSessions}),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -157,20 +159,20 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
   Widget _header() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'NEKED GENERÁLT',
-          style: TextStyle(
+          t('generator.eyebrow'),
+          style: const TextStyle(
             fontSize: 11,
             letterSpacing: 1.6,
             color: AppColors.muted,
             fontWeight: FontWeight.w800,
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         Text(
-          'Mennyi idő alatt érnéd el a formádat?',
-          style: TextStyle(
+          t('generator.title'),
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
             letterSpacing: -1,
@@ -178,10 +180,10 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
             height: 1.1,
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         Text(
-          'Választasz heti hány edzést, és pontosan annyi tervet készítünk.',
-          style: TextStyle(
+          t('generator.subtitle'),
+          style: const TextStyle(
             fontSize: 14,
             color: AppColors.muted,
             height: 1.5,
@@ -195,7 +197,7 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Hét'),
+        _sectionLabel(t('generator.weeks_label')),
         const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -212,9 +214,9 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            const Text(
-              'HÉT',
-              style: TextStyle(
+            Text(
+              t('generator.weeks_unit'),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.4,
@@ -261,7 +263,7 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Edzés / hét'),
+        _sectionLabel(t('generator.sessions_label')),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -282,11 +284,11 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('Izomcsoportok'),
+        _sectionLabel(t('generator.muscles_label')),
         const SizedBox(height: 4),
-        const Text(
-          'Hagyd üresen mind a tíz csoporthoz, vagy válassz konkrét fókuszt.',
-          style: TextStyle(fontSize: 12, color: AppColors.muted),
+        Text(
+          t('generator.muscles_hint'),
+          style: const TextStyle(fontSize: 12, color: AppColors.muted),
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -295,7 +297,7 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
           children: [
             for (final m in _muscleOptions)
               _ChipBtn(
-                label: m.label,
+                label: t(m.labelKey),
                 selected: _selectedMuscles.contains(m.key),
                 onTap: () => setState(() {
                   if (_selectedMuscles.contains(m.key)) {
@@ -312,11 +314,11 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
           GestureDetector(
             onTap: () => setState(_selectedMuscles.clear),
             behavior: HitTestBehavior.opaque,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
-                'KIVÁLASZTÁS TÖRLÉSE',
-                style: TextStyle(
+                t('generator.clear_selection'),
+                style: const TextStyle(
                   fontSize: 11,
                   letterSpacing: 1.4,
                   color: AppColors.muted,
@@ -340,9 +342,9 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'ELŐNÉZET',
-            style: TextStyle(
+          Text(
+            t('generator.preview'),
+            style: const TextStyle(
               fontSize: 10,
               letterSpacing: 1.6,
               color: AppColors.muted,
@@ -365,9 +367,9 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
                 ),
               ),
               const SizedBox(width: 6),
-              const Text(
-                'EDZÉSTERV',
-                style: TextStyle(
+              Text(
+                t('generator.plan_unit'),
+                style: const TextStyle(
                   fontSize: 14,
                   letterSpacing: 1.6,
                   color: AppColors.muted,
@@ -378,8 +380,8 @@ class _TrainingGeneratorScreenState extends State<TrainingGeneratorScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            '$_weeks hét × $_sessionsPerWeek edzés. '
-            '${_selectedMuscles.isEmpty ? 'Az összes izomcsoport.' : '${_selectedMuscles.length} fókuszizom.'}',
+            '${tFmt('generator.preview_line', {'weeks': _weeks, 'sessions': _sessionsPerWeek})} '
+            '${_selectedMuscles.isEmpty ? t('generator.preview_all_muscles') : tFmt('generator.preview_focus', {'count': _selectedMuscles.length})}',
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.muted,

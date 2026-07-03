@@ -24,13 +24,15 @@ class GeneratedStories extends StatelessWidget {
   List<SavedTraining> _sorted() {
     final notDone = trainings.where((t) => !t.isDone).toList()
       ..sort((a, b) {
-        // Lower day-index first so the next session is at the front.
-        final ad = a.dayIndex ?? 0;
-        final bd = b.dayIndex ?? 0;
-        if (ad != bd) return ad.compareTo(bd);
+        // Chronological plan order: week-major, day-minor. Sorting by day
+        // first grouped every week's "day 1" together, so a multi-week plan's
+        // front card wasn't the actual next session.
         final aw = a.weekIndex ?? 0;
         final bw = b.weekIndex ?? 0;
-        return aw.compareTo(bw);
+        if (aw != bw) return aw.compareTo(bw);
+        final ad = a.dayIndex ?? 0;
+        final bd = b.dayIndex ?? 0;
+        return ad.compareTo(bd);
       });
     final done = trainings.where((t) => t.isDone).toList()
       ..sort((a, b) {

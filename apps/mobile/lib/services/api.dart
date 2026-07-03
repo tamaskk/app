@@ -26,6 +26,28 @@ class FreeTierLimitException implements Exception {
   String toString() => 'FreeTierLimitException(limit=$limit)';
 }
 
+/// Thrown when the user already has a HYROX plan. Carries the existing
+/// planId so the UI can offer "open it" or "replace it".
+class HyroxPlanExistsException implements Exception {
+  final String? planId;
+  HyroxPlanExistsException(this.planId);
+
+  @override
+  String toString() => 'HyroxPlanExistsException(planId=$planId)';
+}
+
+/// Result of a successful HYROX plan creation.
+class HyroxPlanResult {
+  final String planId;
+  final int created;
+  final String divisionLabel;
+  const HyroxPlanResult({
+    required this.planId,
+    required this.created,
+    required this.divisionLabel,
+  });
+}
+
 /// Thin client over the HEFTOR backend (apps/web), which in turn proxies the
 /// MuscleWiki API. The MuscleWiki key never lives in the app.
 class Api {
@@ -110,9 +132,10 @@ class Api {
     return ExerciseDetail.fromJson(data as Map<String, dynamic>);
   }
 
-  /// Fetch all saved trainings, newest first.
-  Future<List<SavedTraining>> getTrainings() async {
-    final data = await _get(_uri('/api/trainings'));
+  /// Fetch saved trainings, newest first. By default HYROX plans are excluded
+  /// (they live in the HYROX tab); pass `discipline: 'hyrox'` to fetch those.
+  Future<List<SavedTraining>> getTrainings({String? discipline}) async {
+    final data = await _get(_uri('/api/trainings', {'discipline': discipline}));
     final results = (data as Map<String, dynamic>)['results'] as List? ?? [];
     return results
         .map((e) => SavedTraining.fromJson(e as Map<String, dynamic>))
@@ -222,6 +245,97 @@ class Api {
     );
   }
 
+  /// Update an already-logged session in place (used when a finished workout is
+  /// resumed from the dashboard and finished again). Refreshes the logged sets
+  /// and finish time on the existing session instead of creating a second,
+  /// overlapping one — and the backend does NOT re-award XP for it, so the
+  /// returned bundle carries no rankDelta.
+  Future<WorkoutSessionWithRank> updateSession({
+    required String id,
+    required DateTime finishedAt,
+    required List<Map<String, dynamic>> exercises,
+  }) async {
+    final token = await _authToken();
+    final res = await _client.patch(
+      _uri('/api/sessions/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'finishedAt': finishedAt.toUtc().toIso8601String(),
+        'exercises': exercises,
+      }),
+    );
+    final body = res.body.isEmpty ? null : jsonDecode(res.body);
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final detail = body is Map ? body['detail']?.toString() : null;
+      throw ApiException(res.statusCode, detail ?? 'Failed to update session');
+    }
+    final map = body as Map<String, dynamic>;
+    return WorkoutSessionWithRank(
+      session: WorkoutSession.fromJson(map),
+      rankDelta: map['rankDelta'] is Map<String, dynamic>
+          ? RankDelta.fromJson(map['rankDelta'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  /// Create the full 12-week HYROX plan in one call (36 trainings under a
+  /// shared planId). Returns the new planId + how many were created.
+  ///
+  /// Throws [HyroxPlanExistsException] (HTTP 409) when the user already has a
+  /// HYROX plan — pass `replace: true` to wipe it and seed a fresh one.
+  Future<HyroxPlanResult> createHyroxPlan({
+    String division = 'men_open',
+    int? targetTimeMin,
+    bool replace = false,
+  }) async {
+    final token = await _authToken();
+    final res = await _client.post(
+      _uri('/api/hyrox/plan'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'division': division,
+        if (targetTimeMin != null) 'targetTimeMin': targetTimeMin,
+        'replace': replace,
+      }),
+    );
+    final body = res.body.isEmpty ? null : jsonDecode(res.body);
+    if (res.statusCode == 409) {
+      final planId = body is Map ? body['planId']?.toString() : null;
+      throw HyroxPlanExistsException(planId);
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final detail = body is Map ? body['detail']?.toString() : null;
+      throw ApiException(res.statusCode, detail ?? 'Failed to create HYROX plan');
+    }
+    final map = (body as Map).cast<String, dynamic>();
+    return HyroxPlanResult(
+      planId: map['planId']?.toString() ?? '',
+      created: (map['created'] as num?)?.toInt() ?? 0,
+      divisionLabel: map['divisionLabel']?.toString() ?? '',
+    );
+  }
+
+  /// Delete the user's HYROX plan (all trainings under [planId], or every
+  /// HYROX training when [planId] is null).
+  Future<void> deleteHyroxPlan({String? planId}) async {
+    final token = await _authToken();
+    final res = await _client.delete(
+      _uri('/api/hyrox/plan', {'planId': planId}),
+      headers: {if (token != null) 'Authorization': 'Bearer $token'},
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final body = res.body.isEmpty ? null : jsonDecode(res.body);
+      final detail = body is Map ? body['detail']?.toString() : null;
+      throw ApiException(res.statusCode, detail ?? 'Failed to delete HYROX plan');
+    }
+  }
+
   /// Delete a training.
   Future<void> deleteTraining(String id) async {
     // Scope the call to this user — without the token the server treats it as
@@ -248,9 +362,17 @@ class Api {
   ) async {
     if (exercises.isEmpty) return {};
     try {
+      // Send the bearer token — the backend scopes progression history to the
+      // caller's own sessions. Without it the call is anonymous (userId:null)
+      // and suggestions would be derived from strangers' logs (or, now that the
+      // server is scoped, from nothing).
+      final token = await _authToken();
       final res = await _client.post(
         _uri('/api/progression'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'exercises': exercises}),
       );
       if (res.statusCode < 200 || res.statusCode >= 300) return {};

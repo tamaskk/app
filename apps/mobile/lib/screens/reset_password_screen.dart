@@ -95,10 +95,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       );
       if (!mounted) return;
       widget.onAuthenticated?.call(user);
-      // If no auth callback was wired (rare), bounce back so the user
-      // doesn't get stuck on a screen with nowhere to go.
-      if (widget.onAuthenticated == null && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      // onAuthenticated only swaps the AuthGate root-route content
+      // (LoginScreen → MainShell) at the BOTTOM of the stack; the pushed
+      // forgot-password + reset routes stay on top, leaving the form visible.
+      // A second tap then re-submits the now-consumed token and 410s. Pop our
+      // own routes back to the root so the authenticated shell is revealed.
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } on AuthException catch (e) {
       // 410 (Gone) is the canonical "token used / expired" — surface a

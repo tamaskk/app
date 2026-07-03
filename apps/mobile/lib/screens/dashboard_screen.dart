@@ -259,6 +259,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           workout: workout,
           // Continue the clock from the time already logged for this workout.
           resumeElapsed: s.duration,
+          // Finishing again updates THIS session instead of logging a second,
+          // overlapping one (which double-counted duration and XP).
+          resumeSessionId: s.id,
         ),
       ),
     );

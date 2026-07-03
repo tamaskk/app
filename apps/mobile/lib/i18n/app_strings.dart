@@ -95,6 +95,64 @@ class AppStrings extends ChangeNotifier {
     'common.exercises': {'en': 'exercises', 'hu': 'gyakorlat'},
     'common.exercise': {'en': 'exercise', 'hu': 'gyakorlat'},
 
+    // ----- Workout player -----
+    'workout.save_failed': {
+      'en': 'Couldn’t save the workout. Check your connection and try again.',
+      'hu': 'Nem sikerült menteni az edzést. Ellenőrizd a kapcsolatot, és próbáld újra.',
+    },
+    'workout.rest_over': {'en': 'Rest over', 'hu': 'Pihenő letelt'},
+    'workout.rest_get_ready': {
+      'en': 'Get ready for the next set',
+      'hu': 'Készülj a következő szettre',
+    },
+    'workout.rest_time': {'en': 'Rest time', 'hu': 'Pihenőidő'},
+    // Sets-table column headers (uppercase).
+    'workout.col_meters': {'en': 'METERS', 'hu': 'MÉTER'},
+    'workout.col_pace': {'en': 'PACE', 'hu': 'TEMPÓ'},
+    'workout.col_reps': {'en': 'REPS', 'hu': 'ISM'},
+    'workout.col_time': {'en': 'TIME', 'hu': 'IDŐ'},
+    // Workout / exercise action menus.
+    'workout.menu_finish': {'en': 'Finish workout', 'hu': 'Edzés befejezése'},
+    'workout.menu_pause': {
+      'en': 'Exit – continue later',
+      'hu': 'Kilépés – később folytatom',
+    },
+    'workout.menu_discard': {'en': 'Discard workout', 'hu': 'Edzés elvetése'},
+    'workout.menu_info': {'en': 'Info', 'hu': 'Infó'},
+    'workout.menu_progression': {'en': 'Progression', 'hu': 'Progresszió'},
+    'workout.menu_change': {'en': 'Change', 'hu': 'Csere'},
+    // Progression strategy picker.
+    'workout.strat_linear': {'en': 'Linear', 'hu': 'Lineáris'},
+    'workout.strat_linear_desc': {
+      'en': '+weight every time',
+      'hu': 'Minden alkalommal +súly',
+    },
+    'workout.strat_double': {'en': 'Double progression', 'hu': 'Dupla progresszió'},
+    'workout.strat_double_desc': {
+      'en': 'Reps first, then weight',
+      'hu': 'Előbb ismétlés, majd súly',
+    },
+    'workout.strat_rpe': {'en': 'RPE-based', 'hu': 'RPE alapú'},
+    'workout.strat_rpe_desc': {
+      'en': 'Targeted load at RPE 7–8',
+      'hu': 'RPE 7–8 célzott terhelés',
+    },
+    'workout.strat_none': {'en': 'None', 'hu': 'Nincs'},
+    'workout.strat_none_desc': {
+      'en': 'Don’t suggest anything',
+      'hu': 'Ne javasoljon semmit',
+    },
+    'workout.how_to': {'en': 'How to', 'hu': 'Hogyan'},
+    'workout.watch_youtube': {
+      'en': 'Watch on YouTube',
+      'hu': 'Megnézés YouTube-on',
+    },
+    'workout.no_more_exercises': {
+      'en': 'No more exercises',
+      'hu': 'Nincs több gyakorlat',
+    },
+    'workout.exit': {'en': 'Exit', 'hu': 'Kilépés'},
+
     // ----- Nav / app titles -----
     'app.title': {'en': 'HEFTOR', 'hu': 'HEFTOR'},
     'nav.home': {'en': 'Home', 'hu': 'Kezdőlap'},
@@ -974,6 +1032,238 @@ class AppStrings extends ChangeNotifier {
           'Ingyenes fiókokon maximum {n} edzést menthetsz. Frissíts Pro-ra a korlátlan edzésekért és a teljes coach-ért.',
     },
     'free_limit.cta': {'en': 'See Pro', 'hu': 'Pro megnyitása'},
+
+    // ----- Calendar insights (uppercase monochrome chips) -----
+    // Weekday names as used inside the insight sentences: Hungarian superessive
+    // ("PÉNTEKEN"), English plain uppercase ("FRIDAY").
+    'insights.day.1': {'en': 'MONDAY', 'hu': 'HÉTFŐN'},
+    'insights.day.2': {'en': 'TUESDAY', 'hu': 'KEDDEN'},
+    'insights.day.3': {'en': 'WEDNESDAY', 'hu': 'SZERDÁN'},
+    'insights.day.4': {'en': 'THURSDAY', 'hu': 'CSÜTÖRTÖKÖN'},
+    'insights.day.5': {'en': 'FRIDAY', 'hu': 'PÉNTEKEN'},
+    'insights.day.6': {'en': 'SATURDAY', 'hu': 'SZOMBATON'},
+    'insights.day.7': {'en': 'SUNDAY', 'hu': 'VASÁRNAP'},
+    'insights.most_common_day': {
+      'en': 'YOU TRAIN MOST ON {day} ({count}×)',
+      'hu': '{day} EDZESZ LEGTÖBBET ({count} ALKALOM)',
+    },
+    'insights.least_common_day': {
+      'en': '{day} IS YOUR RAREST',
+      'hu': '{day} A LEGRITKÁBB',
+    },
+    'insights.avg_start': {
+      'en': 'YOU USUALLY START AT {time}',
+      'hu': 'ÁTLAGOSAN {time}-KOR KEZDESZ',
+    },
+    'insights.avg_duration': {
+      'en': 'AVG SESSION: {min} MIN',
+      'hu': 'ÁTLAG SESSION: {min} PERC',
+    },
+    'insights.hl_biggest_session': {
+      'en': 'BIGGEST SESSION',
+      'hu': 'LEGNAGYOBB SESSION',
+    },
+    'insights.hl_most_sets': {'en': 'MOST SETS', 'hu': 'LEGTÖBB SETT'},
+    'insights.hl_new_prs': {'en': 'NEW PRS', 'hu': 'ÚJ PR-OK'},
+    'insights.sets_count': {'en': '{n} SETS', 'hu': '{n} SET'},
+    'insights.workout_fallback': {'en': 'WORKOUT', 'hu': 'EDZÉS'},
+
+    // ----- Training generator -----
+    'generator.muscle_chest': {'en': 'CHEST', 'hu': 'MELL'},
+    'generator.muscle_back': {'en': 'BACK', 'hu': 'HÁT'},
+    'generator.muscle_shoulders': {'en': 'SHOULDERS', 'hu': 'VÁLL'},
+    'generator.muscle_biceps': {'en': 'BICEPS', 'hu': 'BICEPSZ'},
+    'generator.muscle_triceps': {'en': 'TRICEPS', 'hu': 'TRICEPSZ'},
+    'generator.muscle_quads': {'en': 'QUADS', 'hu': 'COMB'},
+    'generator.muscle_hamstrings': {'en': 'HAMSTRINGS', 'hu': 'COMBHAJLÍTÓ'},
+    'generator.muscle_glutes': {'en': 'GLUTES', 'hu': 'FAR'},
+    'generator.muscle_calves': {'en': 'CALVES', 'hu': 'VÁDLI'},
+    'generator.muscle_abs': {'en': 'ABS', 'hu': 'HAS'},
+    'generator.generated_snack': {
+      'en': '{count} workouts generated.',
+      'hu': '{count} edzés generálva.',
+    },
+    'generator.network_error': {
+      'en': 'Network error. Please try again.',
+      'hu': 'Hálózati hiba. Próbáld újra.',
+    },
+    'generator.cta': {
+      'en': 'GENERATE {count} WORKOUTS',
+      'hu': 'GENERÁLD A(Z) {count} EDZÉST',
+    },
+    'generator.eyebrow': {'en': 'GENERATED FOR YOU', 'hu': 'NEKED GENERÁLT'},
+    'generator.title': {
+      'en': 'How fast do you want to reach your shape?',
+      'hu': 'Mennyi idő alatt érnéd el a formádat?',
+    },
+    'generator.subtitle': {
+      'en': 'Pick how many workouts a week, and we’ll build exactly that many plans.',
+      'hu': 'Választasz heti hány edzést, és pontosan annyi tervet készítünk.',
+    },
+    'generator.weeks_label': {'en': 'Weeks', 'hu': 'Hét'},
+    'generator.weeks_unit': {'en': 'WEEKS', 'hu': 'HÉT'},
+    'generator.sessions_label': {'en': 'Workouts / week', 'hu': 'Edzés / hét'},
+    'generator.muscles_label': {'en': 'Muscle groups', 'hu': 'Izomcsoportok'},
+    'generator.muscles_hint': {
+      'en': 'Leave empty for all ten groups, or pick a specific focus.',
+      'hu': 'Hagyd üresen mind a tíz csoporthoz, vagy válassz konkrét fókuszt.',
+    },
+    'generator.clear_selection': {
+      'en': 'CLEAR SELECTION',
+      'hu': 'KIVÁLASZTÁS TÖRLÉSE',
+    },
+    'generator.preview': {'en': 'PREVIEW', 'hu': 'ELŐNÉZET'},
+    'generator.plan_unit': {'en': 'WORKOUTS', 'hu': 'EDZÉSTERV'},
+    'generator.preview_line': {
+      'en': '{weeks} weeks × {sessions} workouts.',
+      'hu': '{weeks} hét × {sessions} edzés.',
+    },
+    'generator.preview_all_muscles': {
+      'en': 'All muscle groups.',
+      'hu': 'Az összes izomcsoport.',
+    },
+    'generator.preview_focus': {
+      'en': '{count} focus muscles.',
+      'hu': '{count} fókuszizom.',
+    },
+
+    // ----- Onboarding (post-registration question flow) -----
+    'onboarding.goal_title': {'en': 'What’s your goal?', 'hu': 'Mi a célod?'},
+    'onboarding.goal_subtitle': {
+      'en': 'We’ll tailor the program to it.',
+      'hu': 'Erre szabjuk a programot.',
+    },
+    'onboarding.goal_lose_fat': {'en': 'Lose fat', 'hu': 'Fogyás'},
+    'onboarding.goal_lose_fat_sub': {
+      'en': 'Keep muscle in a deficit',
+      'hu': 'Tartsd meg az izmot deficit alatt',
+    },
+    'onboarding.goal_build_muscle': {'en': 'Build muscle', 'hu': 'Izomépítés'},
+    'onboarding.goal_build_muscle_sub': {
+      'en': 'Maximum hypertrophy',
+      'hu': 'Maximális hipertrófia',
+    },
+    'onboarding.goal_strength': {
+      'en': 'Strength & performance',
+      'hu': 'Erő és teljesítmény',
+    },
+    'onboarding.goal_strength_sub': {
+      'en': 'Raise your 1RM on the main lifts',
+      'hu': 'Növeld az 1RM-et a fő gyakorlatokon',
+    },
+    'onboarding.goal_maintain': {'en': 'Maintain', 'hu': 'Fenntartás'},
+    'onboarding.goal_maintain_sub': {
+      'en': 'Keep muscle, refine your look',
+      'hu': 'Tartsd az izmot, javítsd az összképet',
+    },
+    'onboarding.exp_title': {
+      'en': 'How experienced are you?',
+      'hu': 'Mennyi a tapasztalatod?',
+    },
+    'onboarding.exp_subtitle': {
+      'en': 'How long have you trained regularly?',
+      'hu': 'Mióta edzel rendszeresen?',
+    },
+    'onboarding.exp_beginner': {'en': 'Beginner', 'hu': 'Kezdő'},
+    'onboarding.exp_beginner_sub': {
+      'en': 'Less than 1 year',
+      'hu': 'Kevesebb mint 1 év',
+    },
+    'onboarding.exp_intermediate': {'en': 'Intermediate', 'hu': 'Haladó'},
+    'onboarding.exp_intermediate_sub': {'en': '1–3 years', 'hu': '1–3 év'},
+    'onboarding.exp_advanced': {'en': 'Advanced', 'hu': 'Tapasztalt'},
+    'onboarding.exp_advanced_sub': {'en': '3+ years', 'hu': '3+ év'},
+    'onboarding.exp_elite': {'en': 'Elite', 'hu': 'Elit'},
+    'onboarding.exp_elite_sub': {
+      'en': '5+ years, coaching knowledge',
+      'hu': '5+ év, edzői tudás',
+    },
+    'onboarding.body_title': {
+      'en': 'A few things about you',
+      'hu': 'Pár adat rólad',
+    },
+    'onboarding.body_subtitle': {
+      'en': 'We tune your weekly volume to these.',
+      'hu': 'Ezekre szabjuk a heti volument.',
+    },
+    'onboarding.gender': {'en': 'Gender', 'hu': 'Nem'},
+    'onboarding.gender_male': {'en': 'Male', 'hu': 'Férfi'},
+    'onboarding.gender_female': {'en': 'Female', 'hu': 'Nő'},
+    'onboarding.gender_other': {'en': 'Other', 'hu': 'Egyéb'},
+    'onboarding.age': {'en': 'Age', 'hu': 'Életkor'},
+    'onboarding.years_unit': {'en': 'yr', 'hu': 'év'},
+    'onboarding.weight': {'en': 'Body weight', 'hu': 'Testsúly'},
+    'onboarding.cardio': {'en': 'Cardio amount', 'hu': 'Cardio mennyiség'},
+    'onboarding.cardio_none': {'en': 'None', 'hu': 'Semmi'},
+    'onboarding.cardio_light': {'en': 'Light', 'hu': 'Kevés'},
+    'onboarding.cardio_moderate': {'en': 'Moderate', 'hu': 'Közepes'},
+    'onboarding.cardio_high': {'en': 'A lot', 'hu': 'Sok'},
+    'onboarding.schedule_title': {'en': 'Your weekly rhythm', 'hu': 'Heti ritmusod'},
+    'onboarding.schedule_subtitle': {
+      'en': 'How many days, and how long?',
+      'hu': 'Hány nap edzés, mennyi időre?',
+    },
+    'onboarding.days_per_week': {
+      'en': 'Training days / week',
+      'hu': 'Edzésnap / hét',
+    },
+    'onboarding.days_optimal': {
+      'en': 'OPTIMAL FOR YOUR LEVEL',
+      'hu': 'OPTIMÁLIS A SZINTEDHEZ',
+    },
+    'onboarding.days_recovery_edge': {
+      'en': 'On the edge of recovery',
+      'hu': 'A regenerálás határán',
+    },
+    'onboarding.days_fine': {'en': 'Fine', 'hu': 'Megfelelő'},
+    'onboarding.session_length': {
+      'en': 'Length of one workout',
+      'hu': 'Egy edzés hossza',
+    },
+    'onboarding.split_title': {'en': 'Training split', 'hu': 'Edzésfelosztás'},
+    'onboarding.split_subtitle': {
+      'en': 'How should we organise the weeks?',
+      'hu': 'Hogyan szervezzük a heteket?',
+    },
+    'onboarding.split_full_body_sub': {
+      'en': 'Every muscle every day, high frequency',
+      'hu': 'Minden izom minden nap, magas frekvencia',
+    },
+    'onboarding.split_upper_lower_sub': {
+      'en': 'Upper and lower body on separate days',
+      'hu': 'Felső- és alsótest külön napokon',
+    },
+    'onboarding.split_ppl_sub': {
+      'en': 'Push, pull, legs on separate days',
+      'hu': 'Tolás, húzás, láb külön napokon',
+    },
+    'onboarding.split_bro_sub': {
+      'en': 'One muscle group / day, 5–6 day week',
+      'hu': 'Egy izomcsoport / nap, 5–6 napos hét',
+    },
+    'onboarding.recommended': {'en': 'RECOMMENDED', 'hu': 'AJÁNLOTT'},
+    'onboarding.volume_title': {
+      'en': 'Your weekly optimum',
+      'hu': 'A heti optimumod',
+    },
+    'onboarding.volume_subtitle': {
+      'en': 'This many working sets per muscle gives ideal results.',
+      'hu': 'Ennyi munka-szett izomcsoportonként ad ideális eredményt.',
+    },
+    'onboarding.save_plan': {'en': 'Save my plan', 'hu': 'Mentsd a tervemet'},
+    'onboarding.volume_unit': {
+      'en': 'sets / muscle / week',
+      'hu': 'szett / izom / hét',
+    },
+    'onboarding.volume_source': {
+      'en': 'Based on RP MEV / MAV',
+      'hu': 'RP MEV / MAV alapján',
+    },
+    'onboarding.fine_tune': {'en': 'Tune', 'hu': 'Hangold'},
+    'onboarding.try_a_set': {
+      'en': 'Try a set first →',
+      'hu': 'Próbálj egy szettet előbb →',
+    },
   };
 }
 
