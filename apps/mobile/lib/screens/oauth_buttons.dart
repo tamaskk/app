@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import '../i18n/app_strings.dart';
 import '../models/auth.dart';
 import '../models/onboarding_data.dart';
 import '../services/auth_service.dart';
@@ -44,7 +45,7 @@ class _OAuthButtonsState extends State<OAuthButtons> {
       );
       final idToken = credential.identityToken;
       if (idToken == null) {
-        throw AuthException(401, 'Az Apple bejelentkezés nem adott vissza tokent.');
+        throw AuthException(401, t('oauth.apple_no_token'));
       }
       // Apple only returns name on the first sign-in — pass it through.
       final name = [credential.givenName, credential.familyName]
@@ -64,7 +65,7 @@ class _OAuthButtonsState extends State<OAuthButtons> {
     } on SignInWithAppleAuthorizationException {
       // User cancelled — no toast.
     } catch (_) {
-      _showError('Nem sikerült belépni az Apple ID-val.');
+      _showError(t('oauth.apple_failed'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -80,8 +81,7 @@ class _OAuthButtonsState extends State<OAuthButtons> {
       final auth = await account.authentication;
       final idToken = auth.idToken;
       if (idToken == null) {
-        throw AuthException(
-            401, 'A Google bejelentkezés nem adott vissza tokent.');
+        throw AuthException(401, t('oauth.google_no_token'));
       }
       final user = await widget.auth.signInWithOAuth(
         provider: 'google',
@@ -93,7 +93,7 @@ class _OAuthButtonsState extends State<OAuthButtons> {
     } on AuthException catch (e) {
       _showError(e.message);
     } catch (_) {
-      _showError('Nem sikerült belépni a Google fiókkal.');
+      _showError(t('oauth.google_failed'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -119,7 +119,7 @@ class _OAuthButtonsState extends State<OAuthButtons> {
           children: [
             if (showApple) ...[
               _OAuthButton(
-                label: 'Folytatás Apple-lel',
+                label: t('oauth.continue_apple'),
                 onPressed: _signInWithApple,
                 background: AppColors.onSurface,
                 foreground: AppColors.background,
@@ -128,7 +128,7 @@ class _OAuthButtonsState extends State<OAuthButtons> {
               const SizedBox(height: 10),
             ],
             _OAuthButton(
-              label: 'Folytatás Google-lel',
+              label: t('oauth.continue_google'),
               onPressed: _signInWithGoogle,
               background: AppColors.surfaceLow,
               foreground: AppColors.onSurface,
@@ -138,18 +138,20 @@ class _OAuthButtonsState extends State<OAuthButtons> {
             ),
             const SizedBox(height: 20),
             Row(
-              children: const [
-                Expanded(child: Divider(color: AppColors.outline, height: 1)),
+              children: [
+                const Expanded(
+                    child: Divider(color: AppColors.outline, height: 1)),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('vagy',
-                      style: TextStyle(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(t('oauth.or'),
+                      style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.muted,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.2)),
                 ),
-                Expanded(child: Divider(color: AppColors.outline, height: 1)),
+                const Expanded(
+                    child: Divider(color: AppColors.outline, height: 1)),
               ],
             ),
           ],

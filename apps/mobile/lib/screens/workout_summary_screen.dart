@@ -6,13 +6,12 @@ import '../services/api.dart';
 import '../models/api_models.dart';
 import '../utils/text.dart';
 import '../widgets/rank_up_overlay.dart';
+import '../i18n/app_strings.dart';
 
-const _months = [
-  'Jan', 'Feb', 'Már', 'Ápr', 'Máj', 'Jún',
-  'Júl', 'Aug', 'Sze', 'Okt', 'Nov', 'Dec',
-];
+/// Localized 3-letter month abbreviation for a 1-based month number.
+String _monthAbbr(int month) => t('summary.month_$month');
 
-String _fmtDate(DateTime d) => '${_months[d.month - 1]}. ${d.day}.';
+String _fmtDate(DateTime d) => '${_monthAbbr(d.month)}. ${d.day}.';
 
 String _fmtDur(Duration d) {
   final h = d.inHours;
@@ -157,7 +156,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
             ),
           const SizedBox(height: 4),
           Center(
-            child: Text(titleCase(s.name.isEmpty ? 'Edzés' : s.name),
+            child: Text(titleCase(s.name.isEmpty ? t('summary.workout') : s.name),
                 style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,

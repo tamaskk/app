@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
+import '../i18n/app_strings.dart';
 import '../models/auth.dart';
 
 /// Thrown when an auth request fails; `message` is safe to show the user.
@@ -60,7 +61,7 @@ class AuthService {
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final json = res.body.isEmpty ? null : jsonDecode(res.body);
       final detail = json is Map ? json['detail']?.toString() : null;
-      throw AuthException(res.statusCode, detail ?? 'Hiba történt');
+      throw AuthException(res.statusCode, detail ?? t('common.error'));
     }
   }
 
@@ -107,7 +108,7 @@ class AuthService {
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final detail = json is Map ? json['detail']?.toString() : null;
       throw AuthException(
-          res.statusCode, detail ?? 'Onboarding mentése sikertelen');
+          res.statusCode, detail ?? t('onboarding.save_failed'));
     }
     final map = json as Map<String, dynamic>;
     _user = AuthUser.fromJson(map['user'] as Map<String, dynamic>);
@@ -141,7 +142,7 @@ class AuthService {
     final json = res.body.isEmpty ? null : jsonDecode(res.body);
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final detail = json is Map ? json['detail']?.toString() : null;
-      throw AuthException(res.statusCode, detail ?? 'Mentés sikertelen');
+      throw AuthException(res.statusCode, detail ?? t('autherr.save_failed'));
     }
     final map = json as Map<String, dynamic>;
     _user = AuthUser.fromJson(map['user'] as Map<String, dynamic>);
@@ -280,7 +281,7 @@ class AuthService {
     final json = res.body.isEmpty ? null : jsonDecode(res.body);
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final detail = json is Map ? json['detail']?.toString() : null;
-      throw AuthException(res.statusCode, detail ?? 'Generálás sikertelen');
+      throw AuthException(res.statusCode, detail ?? t('autherr.generate_failed'));
     }
     return (json as Map<String, dynamic>?) ?? const {};
   }
@@ -379,7 +380,7 @@ class AuthService {
     final json = res.body.isEmpty ? null : jsonDecode(res.body);
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final detail = json is Map ? json['detail']?.toString() : null;
-      throw AuthException(res.statusCode, detail ?? 'Hiba történt');
+      throw AuthException(res.statusCode, detail ?? t('common.error'));
     }
     return (json as Map<String, dynamic>?) ?? const {};
   }
@@ -397,7 +398,7 @@ class AuthService {
     final json = res.body.isEmpty ? null : jsonDecode(res.body);
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final detail = json is Map ? json['detail']?.toString() : null;
-      throw AuthException(res.statusCode, detail ?? 'Hiba történt');
+      throw AuthException(res.statusCode, detail ?? t('common.error'));
     }
     final map = json as Map<String, dynamic>;
     _token = map['token'] as String?;

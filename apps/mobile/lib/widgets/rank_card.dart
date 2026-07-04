@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/rank.dart';
 import '../theme/app_theme.dart';
+import '../i18n/app_strings.dart';
 
 /// The signature rank visual — a huge roman numeral above the rank name.
 /// Used on the Account rank section, the rank-up overlay, and the dashboard
@@ -98,9 +99,9 @@ class RankCard extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ] else ...[
-            const Text(
-              'CAP ELÉRVE — LEGENDÁS',
-              style: TextStyle(
+            Text(
+              t('rank.cap_reached'),
+              style: const TextStyle(
                 fontSize: 11,
                 letterSpacing: 1.6,
                 fontWeight: FontWeight.w800,
@@ -134,9 +135,9 @@ class RankChip extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const Text(
-              'RANG',
-              style: TextStyle(
+            Text(
+              t('dashboard.rank'),
+              style: const TextStyle(
                 fontSize: 10,
                 letterSpacing: 1.6,
                 color: AppColors.muted,

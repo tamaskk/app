@@ -81,7 +81,7 @@ class _PredefinedWorkoutScreenState extends State<PredefinedWorkoutScreen> {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Nem sikerült elérni a gyakorlat-adatbázist.');
+        setState(() => _error = t('pw.db_unreachable'));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -112,7 +112,7 @@ class _PredefinedWorkoutScreenState extends State<PredefinedWorkoutScreen> {
     } on ApiException catch (e) {
       _snack(e.message);
     } catch (_) {
-      _snack('Nem sikerült menteni. Fut a szerver?');
+      _snack(t('pw.save_failed'));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -170,7 +170,7 @@ class _PredefinedWorkoutScreenState extends State<PredefinedWorkoutScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(color: AppColors.onSurface),
-        title: const Text('Ajánlott edzés'),
+        title: Text(t('pw.appbar_title')),
       ),
       body: Column(
         children: [
@@ -199,7 +199,7 @@ class _PredefinedWorkoutScreenState extends State<PredefinedWorkoutScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppColors.muted)),
               const SizedBox(height: 16),
-              TextButton(onPressed: _load, child: const Text('Újra')),
+              TextButton(onPressed: _load, child: Text(t('common.retry'))),
             ],
           ),
         ),
@@ -217,7 +217,9 @@ class _PredefinedWorkoutScreenState extends State<PredefinedWorkoutScreen> {
                 letterSpacing: -1,
                 color: AppColors.onSurface)),
         const SizedBox(height: 4),
-        Text('${w.subtitle} · ${_exercises.length} gyakorlat',
+        Text(
+            tFmt('pw.subtitle_count',
+                {'subtitle': w.subtitle, 'count': _exercises.length}),
             style: const TextStyle(color: AppColors.muted, fontSize: 14)),
         const SizedBox(height: 20),
         ..._exercises.asMap().entries.map((e) => _exerciseRow(e.key, e.value)),
@@ -332,8 +334,9 @@ class _PredefinedWorkoutScreenState extends State<PredefinedWorkoutScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: AppColors.background),
                   )
-                : const Text('Hozzáadás az edzéseimhez',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                : Text(t('pw.add_to_my_workouts'),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15)),
           ),
         ),
       ),

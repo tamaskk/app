@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../models/exercise_api_models.dart';
 import '../services/exercise_api.dart';
 import '../utils/text.dart';
+import '../i18n/app_strings.dart';
 import 'exercise_placeholder.dart';
 
 const _sheetDecoration = BoxDecoration(
@@ -105,7 +106,8 @@ class _ExerciseInfoSheetState extends State<_ExerciseInfoSheet> {
       return Center(
         child: _loading
             ? const CircularProgressIndicator()
-            : const Text('Nincs adat', style: TextStyle(color: AppColors.muted)),
+            : Text(t('exercise.no_data'),
+                style: const TextStyle(color: AppColors.muted)),
       );
     }
     return ListView(
@@ -120,10 +122,10 @@ class _ExerciseInfoSheetState extends State<_ExerciseInfoSheet> {
                 fontWeight: FontWeight.w800,
                 letterSpacing: -1,
                 color: AppColors.onSurface)),
-        _chips('Célzott izmok', ex.targetMuscles),
-        _chips('Másodlagos izmok', ex.secondaryMuscles),
-        _chips('Testrészek', ex.bodyParts),
-        _chips('Eszközök', ex.equipments),
+        _chips(t('detail.target_muscles'), ex.targetMuscles),
+        _chips(t('detail.secondary_muscles'), ex.secondaryMuscles),
+        _chips(t('detail.body_parts'), ex.bodyParts),
+        _chips(t('detail.equipment'), ex.equipments),
         _instructions(ex.instructions),
       ],
     );
@@ -190,7 +192,7 @@ class _ExerciseInfoSheetState extends State<_ExerciseInfoSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        _label('Végrehajtás'),
+        _label(t('detail.execution')),
         const SizedBox(height: 8),
         ...steps.asMap().entries.map((e) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -312,12 +314,12 @@ class _ChangeExerciseSheetState extends State<_ChangeExerciseSheet> {
         child: Column(
           children: [
             _grabHandle(),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Gyakorlat cseréje',
-                    style: TextStyle(
+                child: Text(t('exercise.change_exercise'),
+                    style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
@@ -342,7 +344,8 @@ class _ChangeExerciseSheetState extends State<_ChangeExerciseSheet> {
         separatorBuilder: (_, __) => const SizedBox(width: 4),
         itemBuilder: (context, i) {
           if (i == 0) {
-            return _chip('Mind', _muscleFilter == null, () => _selectMuscle(null));
+            return _chip(t('create.all_filter'), _muscleFilter == null,
+                () => _selectMuscle(null));
           }
           final m = _muscles[i - 1];
           return _chip(m, _muscleFilter == m,
@@ -387,8 +390,9 @@ class _ChangeExerciseSheetState extends State<_ChangeExerciseSheet> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_results.isEmpty) {
-      return const Center(
-          child: Text('Nincs találat', style: TextStyle(color: AppColors.muted)));
+      return Center(
+          child: Text(t('common.no_results'),
+              style: const TextStyle(color: AppColors.muted)));
     }
     return ListView.builder(
       controller: controller,

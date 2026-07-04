@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/rank.dart';
 import '../theme/app_theme.dart';
+import '../i18n/app_strings.dart';
 
 /// Full-bleed black celebration shown when a workout save crosses a new
 /// rank threshold. Static — no confetti — matching the brutalist tone.
@@ -115,9 +116,9 @@ class RankUpOverlay extends StatelessWidget {
                     ),
                   ),
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text(
-                    'TOVÁBB',
-                    style: TextStyle(
+                  child: Text(
+                    t('common.next').toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2,

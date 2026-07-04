@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../i18n/app_strings.dart';
 
 /// A guided, read-only-ish demo of a workout. The user can mark sets done and
 /// see the rest timer + completion flow — exactly enough to feel the app
@@ -104,9 +105,9 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'BEMUTATÓ',
-                            style: TextStyle(
+                          Text(
+                            t('demo.badge_demo'),
+                            style: const TextStyle(
                               fontSize: 11,
                               letterSpacing: 2,
                               color: AppColors.muted,
@@ -124,10 +125,10 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Mell · Triceps · Elülső deltoid',
-                            style:
-                                TextStyle(fontSize: 13, color: AppColors.muted),
+                          Text(
+                            t('demo.bench_muscles'),
+                            style: const TextStyle(
+                                fontSize: 13, color: AppColors.muted),
                           ),
                           const SizedBox(height: 24),
                           ..._sets.asMap().entries.map(
@@ -135,7 +136,7 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
                               ),
                           const SizedBox(height: 8),
                           Text(
-                            'Bemutató szett — semmi nem mentődik, csak próbáld.',
+                            t('demo.try_hint'),
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.muted.withValues(alpha: 0.8),
@@ -289,8 +290,8 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('PIHENŐ',
-                  style: TextStyle(
+              Text(t('demo.rest_label'),
+                  style: const TextStyle(
                       fontSize: 11,
                       letterSpacing: 2,
                       color: AppColors.muted,
@@ -357,9 +358,9 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
                 size: 56, color: AppColors.onSurface),
           ),
           const SizedBox(height: 28),
-          const Text(
-            'Készen vagy.',
-            style: TextStyle(
+          Text(
+            t('demo.done_title'),
+            style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w800,
               letterSpacing: -1,
@@ -367,10 +368,10 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Így néz ki egy szett. A többi edzésed, PR-jeid és heti volumented mostantól számon tartjuk — ha mented a fiókodba.',
+          Text(
+            t('demo.done_body'),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 15, color: AppColors.muted, height: 1.5),
           ),
           const Spacer(),
@@ -385,8 +386,8 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
                     borderRadius: BorderRadius.circular(100)),
               ),
               onPressed: widget.onSaveProgress,
-              child: const Text('Mentsd a haladásod',
-                  style: TextStyle(
+              child: Text(t('demo.save_progress'),
+                  style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
@@ -399,11 +400,11 @@ class _DemoWorkoutScreenState extends State<DemoWorkoutScreen> {
                   }
                 },
             behavior: HitTestBehavior.opaque,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
-                'Vissza a tervhez',
-                style: TextStyle(
+                t('demo.back_to_plan'),
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.muted,
                   fontWeight: FontWeight.w700,

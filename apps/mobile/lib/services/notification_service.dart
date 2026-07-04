@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+import '../i18n/app_strings.dart';
 import '../models/auth.dart';
 
 /// Thin wrapper around `flutter_local_notifications` so the screen code only
@@ -76,13 +77,12 @@ class NotificationService {
     final hour = int.tryParse(parts[0]) ?? 18;
     final minute = int.tryParse(parts[1]) ?? 0;
 
-    const details = NotificationDetails(
-      iOS: DarwinNotificationDetails(),
+    final details = NotificationDetails(
+      iOS: const DarwinNotificationDetails(),
       android: AndroidNotificationDetails(
         'training_reminders',
-        'Edzés emlékeztető',
-        channelDescription:
-            'Napi emlékeztető a tervezett edzésekre.',
+        t('notif.channel_name'),
+        channelDescription: t('notif.channel_desc'),
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -93,8 +93,8 @@ class NotificationService {
       try {
         await _plugin.zonedSchedule(
           _baseId + iso,
-          'HEFTOR',
-          'Ma edzésnap. Indítsd a workoutot.',
+          t('notif.reminder_title'),
+          t('notif.reminder_body'),
           _nextInstanceOfWeekday(iso, hour, minute),
           details,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

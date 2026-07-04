@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../i18n/app_strings.dart';
 
 /// GitHub-style 365-day heatmap. Rows = weekday (Mon..Sun), columns = ISO
 /// weeks of the chosen [year]. Cell shade is a 5-step monochrome ramp from
@@ -46,7 +47,10 @@ class YearlyHeatmap extends StatelessWidget {
     for (var m = 1; m <= 12; m++) {
       final first = DateTime(year, m, 1);
       final week = first.difference(jan1).inDays ~/ 7;
-      out.add(_MonthLabel(_kMonthsShort[m - 1], week));
+      // First letter of the localized short month name — keeps the axis to a
+      // single glyph while staying in the active language (EN 'A' for April,
+      // HU 'Á', etc.).
+      out.add(_MonthLabel(t('month.$m').substring(0, 1), week));
     }
     return out;
   }
@@ -145,9 +149,9 @@ class YearlyHeatmap extends StatelessWidget {
             padding: const EdgeInsets.only(left: 2),
             child: Row(
               children: [
-                const Text(
-                  'KEVÉS',
-                  style: TextStyle(
+                Text(
+                  t('heatmap.less'),
+                  style: const TextStyle(
                     fontSize: 9,
                     letterSpacing: 1,
                     color: AppColors.muted,
@@ -167,9 +171,9 @@ class YearlyHeatmap extends StatelessWidget {
                   SizedBox(width: cellGap),
                 ],
                 const SizedBox(width: 4),
-                const Text(
-                  'SOK',
-                  style: TextStyle(
+                Text(
+                  t('heatmap.more'),
+                  style: const TextStyle(
                     fontSize: 9,
                     letterSpacing: 1,
                     color: AppColors.muted,
@@ -190,7 +194,3 @@ class _MonthLabel {
   final int week;
   const _MonthLabel(this.name, this.week);
 }
-
-const _kMonthsShort = [
-  'J', 'F', 'M', 'Á', 'M', 'J', 'J', 'A', 'SZ', 'O', 'N', 'D',
-];

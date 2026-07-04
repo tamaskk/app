@@ -310,7 +310,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       cards.add(_ListCard(
         title: titleCase(
             tr.name.isEmpty ? t('dashboard.workout_default') : tr.name),
-        subtitle: 'Félbehagyva · ${s.progress.doneCount}/${tr.totalSets} set',
+        subtitle: tFmt('trainingslist.paused',
+            {'done': s.progress.doneCount, 'total': tr.totalSets}),
         bigNumber: tr.exercises.length,
         inProgress: true,
         onTap: () => _startTraining(tr, s.index),

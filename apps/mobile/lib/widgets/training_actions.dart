@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../models/api_models.dart';
 import '../services/api.dart';
 import '../utils/text.dart';
+import '../i18n/app_strings.dart';
 
 const _sheetDecoration = BoxDecoration(
   color: AppColors.background,
@@ -41,8 +42,8 @@ Future<void> showTrainingActions(
             ListTile(
               leading: const Icon(Icons.edit_outlined,
                   color: AppColors.onSurface),
-              title: const Text('Szerkesztés',
-                  style: TextStyle(
+              title: Text(t('common.edit'),
+                  style: const TextStyle(
                       color: AppColors.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.w600)),
@@ -54,8 +55,8 @@ Future<void> showTrainingActions(
             ListTile(
               leading:
                   const Icon(Icons.delete_outline, color: AppColors.accentRed),
-              title: const Text('Törlés',
-                  style: TextStyle(
+              title: Text(t('common.delete'),
+                  style: const TextStyle(
                       color: AppColors.accentRed,
                       fontSize: 16,
                       fontWeight: FontWeight.w600)),
@@ -118,7 +119,7 @@ class _DeleteTrainingSheetState extends State<_DeleteTrainingSheet> {
       if (mounted) {
         setState(() => _deleting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nem sikerült törölni.')),
+          SnackBar(content: Text(t('training.delete_failed'))),
         );
       }
     }
@@ -138,15 +139,17 @@ class _DeleteTrainingSheetState extends State<_DeleteTrainingSheet> {
             children: [
               _handle(),
               const SizedBox(height: 8),
-              Text('"${titleCase(widget.training.name)}" törlése',
+              Text(
+                  tFmt('training.delete_title',
+                      {'name': titleCase(widget.training.name)}),
                   style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: AppColors.onSurface,
                       letterSpacing: -0.5)),
               const SizedBox(height: 8),
-              const Text('Ez a művelet nem visszavonható.',
-                  style: TextStyle(color: AppColors.muted, fontSize: 14)),
+              Text(t('training.delete_irreversible'),
+                  style: const TextStyle(color: AppColors.muted, fontSize: 14)),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -165,8 +168,8 @@ class _DeleteTrainingSheetState extends State<_DeleteTrainingSheet> {
                           height: 18,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
-                      : const Text('Törlés',
-                          style: TextStyle(
+                      : Text(t('common.delete'),
+                          style: const TextStyle(
                               fontWeight: FontWeight.w700, fontSize: 15)),
                 ),
               ),
@@ -180,8 +183,9 @@ class _DeleteTrainingSheetState extends State<_DeleteTrainingSheet> {
                   ),
                   onPressed:
                       _deleting ? null : () => Navigator.of(context).pop(),
-                  child: const Text('Mégse',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                  child: Text(t('common.cancel'),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 15)),
                 ),
               ),
             ],
@@ -236,7 +240,7 @@ class _EditTrainingSheetState extends State<_EditTrainingSheet> {
     final name = _name.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Adj nevet az edzésnek.')),
+        SnackBar(content: Text(t('training.name_required'))),
       );
       return;
     }
@@ -266,7 +270,7 @@ class _EditTrainingSheetState extends State<_EditTrainingSheet> {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nem sikerült menteni.')),
+          SnackBar(content: Text(t('training.save_failed'))),
         );
       }
     }
@@ -292,9 +296,9 @@ class _EditTrainingSheetState extends State<_EditTrainingSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                 child: Row(
                   children: [
-                    const Expanded(
-                      child: Text('Szerkesztés',
-                          style: TextStyle(
+                    Expanded(
+                      child: Text(t('common.edit'),
+                          style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                               color: AppColors.onSurface,
@@ -317,8 +321,9 @@ class _EditTrainingSheetState extends State<_EditTrainingSheet> {
                               child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: AppColors.background))
-                          : const Text('Mentés',
-                              style: TextStyle(fontWeight: FontWeight.w700)),
+                          : Text(t('common.save'),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
@@ -333,7 +338,7 @@ class _EditTrainingSheetState extends State<_EditTrainingSheet> {
                       fontWeight: FontWeight.w600),
                   cursorColor: AppColors.onSurface,
                   decoration: InputDecoration(
-                    labelText: 'Név',
+                    labelText: t('training.name_label'),
                     labelStyle: const TextStyle(color: AppColors.muted),
                     floatingLabelStyle:
                         const TextStyle(color: AppColors.onSurface),
@@ -351,10 +356,10 @@ class _EditTrainingSheetState extends State<_EditTrainingSheet> {
               const SizedBox(height: 8),
               Flexible(
                 child: _exercises.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text('Nincs gyakorlat',
-                            style: TextStyle(color: AppColors.muted)),
+                    ? Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(t('training.no_exercises'),
+                            style: const TextStyle(color: AppColors.muted)),
                       )
                     : ListView.builder(
                         shrinkWrap: true,

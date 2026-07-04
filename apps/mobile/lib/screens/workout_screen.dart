@@ -599,6 +599,43 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
   // --- exercise actions ------------------------------------------------------
 
+  /// Finish, but warn first when any exercise still has unchecked sets. The
+  /// user can proceed (logs the session as-is) or cancel and keep training.
+  Future<void> _confirmFinish() async {
+    final unfinished = workout.exercises
+        .where((e) => e.sets.isNotEmpty && e.sets.any((s) => !s.done))
+        .length;
+    if (unfinished == 0) {
+      _exit(asSession: true);
+      return;
+    }
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceLow,
+        title: Text(t('workout.finish_confirm_title'),
+            style: const TextStyle(color: AppColors.onSurface)),
+        content: Text(
+            tFmt('workout.finish_confirm_body', {'count': unfinished}),
+            style: const TextStyle(color: AppColors.muted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(t('common.cancel'),
+                style: const TextStyle(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(t('workout.finish_anyway'),
+                style: const TextStyle(
+                    color: AppColors.onSurface, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (proceed == true) _exit(asSession: true);
+  }
+
   /// Menu opened from the top-bar hamburger: finish or leave.
   void _showWorkoutMenu() {
     showModalBottomSheet(
@@ -607,7 +644,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       builder: (ctx) => _sheet([
         _menuItem(Icons.check_circle_outline, t('workout.menu_finish'), () {
           Navigator.pop(ctx);
-          _exit(asSession: true);
+          _confirmFinish();
         }),
         _menuItem(Icons.pause_circle_outline, t('workout.menu_pause'), () {
           Navigator.pop(ctx);

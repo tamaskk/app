@@ -5,21 +5,22 @@ import '../services/auth_service.dart';
 import '../models/api_models.dart';
 import '../models/workout.dart';
 import '../utils/text.dart';
+import '../i18n/app_strings.dart';
 import 'workout_screen.dart';
 
 /// Official HYROX divisions, label-matched to the backend (lib/hyroxPlan.ts).
 const _divisions = <(String, String)>[
-  ('men_open', 'Férfi Open'),
-  ('women_open', 'Női Open'),
-  ('men_pro', 'Férfi Pro'),
-  ('women_pro', 'Női Pro'),
+  ('men_open', 'hyrox.division_men_open'),
+  ('women_open', 'hyrox.division_women_open'),
+  ('men_pro', 'hyrox.division_men_pro'),
+  ('women_pro', 'hyrox.division_women_pro'),
 ];
 
 const _phaseNames = {
-  1: 'Alapozás',
-  2: 'Építés',
-  3: 'Csúcsosítás',
-  4: 'Pihentetés',
+  1: 'hyrox.phase_1',
+  2: 'hyrox.phase_2',
+  3: 'hyrox.phase_3',
+  4: 'hyrox.phase_4',
 };
 
 /// The HYROX tab. Mirrors the Edzések experience (list → player → log) but for
@@ -71,7 +72,7 @@ class _HyroxScreenState extends State<HyroxScreen> {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Nem értem el a szervert. Fut a backend?');
+        setState(() => _error = t('hyrox.server_unreachable'));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -87,8 +88,8 @@ class _HyroxScreenState extends State<HyroxScreen> {
           await _api.createHyroxPlan(division: _division, replace: replace);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('HYROX terv létrehozva · ${res.created} edzés '
-              '(${res.divisionLabel})'),
+          content: Text(tFmt('hyrox.plan_created',
+              {'count': res.created, 'label': res.divisionLabel})),
         ),
       );
       await _load();
@@ -98,7 +99,7 @@ class _HyroxScreenState extends State<HyroxScreen> {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Nem sikerült létrehozni a tervet.')),
+        SnackBar(content: Text(t('hyrox.create_failed'))),
       );
     } finally {
       if (mounted) setState(() => _creating = false);
@@ -110,18 +111,17 @@ class _HyroxScreenState extends State<HyroxScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surfaceLow,
-        title: const Text('Már van HYROX terved'),
-        content: const Text(
-            'Lecseréled egy újra? A jelenlegi terv és a benne lévő haladás törlődik.'),
+        title: Text(t('hyrox.plan_exists_title')),
+        content: Text(t('hyrox.plan_exists_body')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Mégse'),
+            child: Text(t('common.cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Csere',
-                style: TextStyle(color: AppColors.accentRed)),
+            child: Text(t('hyrox.replace'),
+                style: const TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -134,17 +134,17 @@ class _HyroxScreenState extends State<HyroxScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surfaceLow,
-        title: const Text('Terv törlése'),
-        content: const Text('Biztosan törlöd a teljes HYROX tervet?'),
+        title: Text(t('hyrox.delete_plan_title')),
+        content: Text(t('hyrox.delete_plan_body')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Mégse'),
+            child: Text(t('common.cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Törlés',
-                style: TextStyle(color: AppColors.accentRed)),
+            child: Text(t('common.delete'),
+                style: const TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -156,7 +156,7 @@ class _HyroxScreenState extends State<HyroxScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nem sikerült törölni.')),
+          SnackBar(content: Text(t('hyrox.delete_failed'))),
         );
       }
     }
@@ -259,7 +259,9 @@ class _HyroxScreenState extends State<HyroxScreen> {
                         letterSpacing: -1,
                         color: AppColors.onSurface)),
                 const SizedBox(height: 2),
-                Text('12 hetes felkészülés · $doneCount / ${_plan.length} nap kész',
+                Text(
+                    tFmt('hyrox.weeks_progress',
+                        {'done': doneCount, 'total': _plan.length}),
                     style: const TextStyle(
                         fontSize: 14, color: AppColors.muted)),
               ],
@@ -268,7 +270,7 @@ class _HyroxScreenState extends State<HyroxScreen> {
           IconButton(
             onPressed: _deletePlan,
             icon: const Icon(Icons.delete_outline, color: AppColors.muted),
-            tooltip: 'Terv törlése',
+            tooltip: t('hyrox.delete_plan_title'),
           ),
         ],
       ),
@@ -284,7 +286,7 @@ class _HyroxScreenState extends State<HyroxScreen> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           child: Row(
             children: [
-              Text('${week + 1}. hét',
+              Text(tFmt('hyrox.week_n', {'week': week + 1}),
                   style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -302,13 +304,14 @@ class _HyroxScreenState extends State<HyroxScreen> {
   Widget _phaseChip(int phase) {
     final color =
         phase == 4 ? AppColors.accentGreen : AppColors.accentAmber;
+    final phaseKey = _phaseNames[phase];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(_phaseNames[phase] ?? '',
+      child: Text(phaseKey == null ? '' : t(phaseKey),
           style: TextStyle(
               fontSize: 11.5, fontWeight: FontWeight.w700, color: color)),
     );
@@ -359,7 +362,11 @@ class _HyroxScreenState extends State<HyroxScreen> {
                             fontWeight: FontWeight.w700,
                             color: AppColors.onSurface)),
                     const SizedBox(height: 3),
-                    Text('${t.exercises.length} gyakorlat · ${t.totalSets} szett',
+                    Text(
+                        tFmt('hyrox.exercises_sets', {
+                          'exercises': t.exercises.length,
+                          'sets': t.totalSets,
+                        }),
                         style: const TextStyle(
                             fontSize: 12.5, color: AppColors.muted)),
                   ],
@@ -414,17 +421,14 @@ class _EmptyState extends StatelessWidget {
                   letterSpacing: -1.5,
                   color: AppColors.onSurface)),
           const SizedBox(height: 8),
-          const Text(
-            '12 hetes felkészülési terv · heti 3 edzésnap · 4 fázis '
-            '(Alapozás → Építés → Csúcsosítás → Pihentetés). A 8 hivatalos '
-            'állomás verseny-súlyokkal, periodizált futással és kompromittált '
-            'futással.',
-            style: TextStyle(
+          Text(
+            t('hyrox.intro_description'),
+            style: const TextStyle(
                 fontSize: 15, height: 1.45, color: AppColors.muted),
           ),
           const SizedBox(height: 28),
-          const Text('DIVÍZIÓ',
-              style: TextStyle(
+          Text(t('hyrox.division_label'),
+              style: const TextStyle(
                   fontSize: 11,
                   letterSpacing: 1.4,
                   fontWeight: FontWeight.w700,
@@ -434,17 +438,17 @@ class _EmptyState extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final (value, label) in _divisions)
+              for (final (value, labelKey) in _divisions)
                 _DivisionChip(
-                  label: label,
+                  label: t(labelKey),
                   selected: value == division,
                   onTap: () => onDivision(value),
                 ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text('Az alapértelmezett súlyok a Férfi Open divízióé.',
-              style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
+          Text(t('hyrox.default_weights_note'),
+              style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
           if (error != null) ...[
             const SizedBox(height: 16),
             Text(error!,
@@ -471,16 +475,15 @@ class _EmptyState extends StatelessWidget {
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: AppColors.background),
                     )
-                  : const Text('Terv létrehozása',
-                      style: TextStyle(
+                  : Text(t('hyrox.create_plan'),
+                      style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Egy kattintás létrehozza mind a 36 edzésnapot. Bármikor törölheted '
-            'és újra létrehozhatod.',
-            style: TextStyle(fontSize: 12.5, color: AppColors.muted),
+          Text(
+            t('hyrox.create_footnote'),
+            style: const TextStyle(fontSize: 12.5, color: AppColors.muted),
           ),
         ],
       ),

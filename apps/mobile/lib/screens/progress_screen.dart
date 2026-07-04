@@ -22,8 +22,8 @@ String _fmtDuration(Duration dur) {
   if (m < 60) return hu ? '$m perc' : '$m min';
   final h = m ~/ 60;
   final rem = m % 60;
-  if (rem == 0) return hu ? '$h óra' : '${h}h';
-  return hu ? '$hó ${rem}p' : '${h}h ${rem}m';
+  if (rem == 0) return tFmt('progress.hours', {'h': h});
+  return tFmt('progress.hours_mins', {'h': h, 'rem': rem});
 }
 
 /// Trim a double for display: 139 not 139.0, 7.5 stays 7.5.

@@ -353,11 +353,11 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 4, 20, 12),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
           child: Text(
-            'FOLYTATHATÓ EDZÉS',
-            style: TextStyle(
+            t('trainingslist.section_continue'),
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.5,
@@ -412,7 +412,8 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Félbehagyva · $done/$total szett kész',
+                      tFmt('trainingslist.paused',
+                          {'done': done, 'total': total}),
                       style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.muted,

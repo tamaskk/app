@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/api_models.dart';
+import '../i18n/app_strings.dart';
 
 /// Volume-by-muscle landmark from RP. Used as a soft reference on the bar —
 /// 0 → MAV reads as 100% width even though MRV could be higher.
@@ -107,7 +108,9 @@ class _MuscleRow extends StatelessWidget {
     // 0..MAV maps to 0..1 fill; above MAV stays clamped at full so the bar
     // never visually overflows.
     final fill = (sets / mav).clamp(0.0, 1.0);
-    final hint = sets >= mav ? 'OPTIMÁLIS' : '${mav - sets} A CÉLIG';
+    final hint = sets >= mav
+        ? t('heatmap.optimal')
+        : tFmt('heatmap.to_goal', {'n': mav - sets});
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

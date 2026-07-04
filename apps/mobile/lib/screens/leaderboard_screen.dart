@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../i18n/app_strings.dart';
 import '../models/rank.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
@@ -14,10 +15,10 @@ extension _ScopeX on LeaderboardScope {
       };
 
   String get label => switch (this) {
-        LeaderboardScope.global => 'GLOBAL',
-        LeaderboardScope.country => 'ORSZÁG',
-        LeaderboardScope.rank => 'SZINT',
-        LeaderboardScope.weekly => 'HÉT',
+        LeaderboardScope.global => t('leaderboard.scope_global'),
+        LeaderboardScope.country => t('leaderboard.scope_country'),
+        LeaderboardScope.rank => t('leaderboard.scope_rank'),
+        LeaderboardScope.weekly => t('leaderboard.scope_weekly'),
       };
 }
 
@@ -40,7 +41,7 @@ class _LbEntry {
 
   factory _LbEntry.fromJson(Map<String, dynamic> json) => _LbEntry(
         userId: json['userId'] as String,
-        username: json['username'] as String? ?? 'ATLÉTA',
+        username: json['username'] as String? ?? t('leaderboard.athlete_fallback'),
         xp: (json['xp'] as num?)?.toInt() ?? 0,
         rank: RankDef.fromJson(
           (json['rank'] as Map).cast<String, dynamic>(),
@@ -135,7 +136,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Nem sikerült betölteni a ranglistát.';
+        _error = t('leaderboard.load_failed');
         _loadingFirst = false;
       });
     }
@@ -180,9 +181,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: const Text(
-                'RANGLISTA',
-                style: TextStyle(
+              child: Text(
+                t('leaderboard.title'),
+                style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -1,
@@ -276,8 +277,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Text(
           _scope == LeaderboardScope.country
-              ? 'Még nincs ország beállítva a fiókodon. Állítsd be a Fiók képernyőn, hogy felkerülj a nemzeti listára.'
-              : 'Senki sem szerzett még XP-t ebben a körben — légy te az első.',
+              ? t('leaderboard.empty_country')
+              : t('leaderboard.empty_general'),
           textAlign: TextAlign.center,
           style: const TextStyle(color: AppColors.muted, fontSize: 14),
         ),
@@ -513,7 +514,7 @@ class _LbRow extends StatelessWidget {
                 if (isMe) ...[
                   const SizedBox(width: 6),
                   Text(
-                    '(TE)',
+                    t('leaderboard.you_tag'),
                     style: TextStyle(
                       fontSize: 10,
                       letterSpacing: 1.4,
@@ -567,11 +568,11 @@ class _StickyOwnRow extends StatelessWidget {
         top: false,
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 6),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
               child: Text(
-                'TE A LISTÁN',
-                style: TextStyle(
+                t('leaderboard.you_on_list'),
+                style: const TextStyle(
                   fontSize: 10,
                   letterSpacing: 1.6,
                   fontWeight: FontWeight.w800,

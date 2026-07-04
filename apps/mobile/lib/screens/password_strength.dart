@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../i18n/app_strings.dart';
 import '../theme/app_theme.dart';
 
 /// Lightweight heuristic password strength score 0..4 — no third-party deps.
@@ -37,15 +38,15 @@ int scorePassword(String pw) {
 String passwordStrengthLabel(int score) {
   switch (score) {
     case 0:
-      return 'Túl rövid';
+      return t('pwstrength.tooShort');
     case 1:
-      return 'Gyenge';
+      return t('pwstrength.weak');
     case 2:
-      return 'Közepes';
+      return t('pwstrength.fair');
     case 3:
-      return 'Erős';
+      return t('pwstrength.strong');
     case 4:
-      return 'Kiváló';
+      return t('pwstrength.excellent');
     default:
       return '';
   }

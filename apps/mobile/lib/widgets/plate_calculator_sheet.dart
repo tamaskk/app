@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../i18n/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../services/plate_settings.dart';
 import '../utils/plates.dart';
@@ -55,11 +56,12 @@ void showPlateCalculator(BuildContext context, double kg) {
                           fontWeight: FontWeight.w700)),
                   const SizedBox(height: 16),
                   if (!r.feasible) ...[
-                    Text('${fmtPlate(kg)}kg a rúd súlya alatt van.',
+                    Text(tFmt('plate.below_bar', {'kg': fmtPlate(kg)}),
                         style: _mono.copyWith(
                             color: AppColors.onSurface, fontSize: 15)),
                     const SizedBox(height: 6),
-                    Text('Minimum: ${fmtPlate(r.barWeight)}kg (üres rúd)',
+                    Text(
+                        tFmt('plate.minimum', {'kg': fmtPlate(r.barWeight)}),
                         style: _mono.copyWith(
                             color: AppColors.muted, fontSize: 13)),
                   ] else ...[

@@ -1,3 +1,5 @@
+import '../i18n/app_strings.dart';
+
 /// Minimal exercise shape returned by list/search endpoints.
 class ExerciseMinimal {
   final int id;
@@ -254,10 +256,13 @@ class StagnationItem {
         tips: _stringList(json['tips']),
       );
 
-  /// `Bench Press — 3 hét stagnál. Próbálj: deload / variation / volume drop`
+  /// `Bench Press — stalled for 3 weeks. Try: deload / variation / volume drop`
   String get advice {
-    final tipText = tips.isEmpty ? '' : ' Próbálj: ${tips.join(' / ')}';
-    return '$name — $weeksStagnant hét stagnál.$tipText';
+    final tipText = tips.isEmpty
+        ? ''
+        : tFmt('stagnation.try', {'tips': tips.join(' / ')});
+    return tFmt('stagnation.advice', {'name': name, 'weeks': weeksStagnant}) +
+        tipText;
   }
 }
 
