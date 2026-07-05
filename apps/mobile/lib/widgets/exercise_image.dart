@@ -41,45 +41,65 @@ class _ExerciseImageState extends State<ExerciseImage> {
   bool _precached = false;
   Timer? _timer;
   int _index = 0;
+  // Bumped on every (re)start so a stale in-flight precache can't clobber the
+  // current frame set or start a duplicate timer.
+  int _gen = 0;
 
   @override
   void initState() {
     super.initState();
-    _resolveFrames();
-  }
-
-  @override
-  void didUpdateWidget(ExerciseImage old) {
-    super.didUpdateWidget(old);
-    if (old.frames != widget.frames || old.url != widget.url) {
-      _timer?.cancel();
-      _timer = null;
-      _precached = false;
-      _index = 0;
-      _loaded = const [];
-      _resolveFrames();
-    }
-  }
-
-  void _resolveFrames() {
-    final explicit =
-        widget.frames?.where((f) => f.trim().isNotEmpty).toList() ?? const [];
-    // Dedupe while preserving order (an explicit list may repeat).
-    final raw = explicit.isNotEmpty ? explicit : framesFromUrl(widget.url ?? '');
-    _resolved = raw.toSet().toList();
+    _resolved = _computeFrames();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Initial mount only — an in-place prop change is handled by didUpdateWidget.
     if (_precached || _resolved.isEmpty) return;
     _precached = true;
-    _precacheAll();
+    _precacheAll(_gen);
   }
 
-  Future<void> _precacheAll() async {
+  @override
+  void didUpdateWidget(ExerciseImage old) {
+    super.didUpdateWidget(old);
+    // Compare by VALUE: imageFrames / framesFromUrl return a fresh list each
+    // build, so reference comparison would restart (and re-precache) on every
+    // rebuild. Only actually-changed frames restart the animation.
+    final next = _computeFrames();
+    if (!_sameList(_resolved, next)) {
+      _resolved = next;
+      _restart();
+    }
+  }
+
+  /// Resolve the widget's inputs into a deduped, non-empty frame URL list.
+  List<String> _computeFrames() {
+    final explicit =
+        widget.frames?.where((f) => f.trim().isNotEmpty).toList() ?? const [];
+    final raw = explicit.isNotEmpty ? explicit : framesFromUrl(widget.url ?? '');
+    return raw.toSet().toList(); // dedupe, preserve order
+  }
+
+  /// Tear down the current animation and precache/animate the new frames.
+  void _restart() {
+    _timer?.cancel();
+    _timer = null;
+    _index = 0;
+    _loaded = const [];
+    _gen++;
+    if (_resolved.isEmpty) {
+      _precached = false;
+      return;
+    }
+    _precached = true;
+    _precacheAll(_gen);
+  }
+
+  Future<void> _precacheAll(int gen) async {
+    final frames = _resolved;
     final ok = <String>[];
-    for (final f in _resolved) {
+    for (final f in frames) {
       try {
         await precacheImage(NetworkImage(f), context);
         ok.add(f);
@@ -87,7 +107,8 @@ class _ExerciseImageState extends State<ExerciseImage> {
         // Skip frames that fail to load (e.g. a derived sibling that 404s).
       }
     }
-    if (!mounted) return;
+    // Bail if disposed or superseded by a newer frame set.
+    if (!mounted || gen != _gen) return;
     setState(() => _loaded = ok);
     if (ok.length >= 2) {
       _timer = Timer.periodic(widget.interval, (_) {
@@ -95,6 +116,14 @@ class _ExerciseImageState extends State<ExerciseImage> {
         setState(() => _index = (_index + 1) % _loaded.length);
       });
     }
+  }
+
+  bool _sameList(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   @override
