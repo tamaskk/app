@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "set -a; [ -f ./.env ] && . ./.env; set +a; next dev",
+    "dev": "set -a; [ -f ./.env ] && . ./.env; set +a; next dev --webpack",
     "build": "set -a; [ -f ./.env ] && . ./.env; set +a; next build",
     "start": "set -a; [ -f ./.env ] && . ./.env; set +a; next start",
     "lint": "eslint",

@@ -42,6 +42,10 @@ export type CatalogueExercise = {
   exerciseId: string;
   name: string;
   gifUrl: string;
+  // Full URLs of every static frame (free-exercise-db ships exactly two per
+  // exercise: `.../0.jpg` and `.../1.jpg`). The client flips between them every
+  // 0.5s to fake a GIF. `gifUrl` stays = images[0] for older clients.
+  images: string[];
   targetMuscles: string[];
   bodyParts: string[];
   equipments: string[];
@@ -80,19 +84,22 @@ function bodyPartsFor(primary: string[]): string[] {
   return [...set];
 }
 
-function imageUrl(images: string[] | undefined): string {
-  if (!images || images.length === 0) return "";
-  // images entries look like "Barbell_Bench_Press/0.jpg".
-  return `${IMAGE_BASE}/${images[0]}`;
+// Map the dataset's relative image paths (e.g. "Barbell_Bench_Press/0.jpg")
+// to absolute CDN URLs.
+function imageUrls(images: string[] | undefined): string[] {
+  if (!images || images.length === 0) return [];
+  return images.map((rel) => `${IMAGE_BASE}/${rel}`);
 }
 
 /** Map a raw record into the catalogue DTO the mobile app parses. */
 export function toCatalogue(r: RawExercise): CatalogueExercise {
   const primary = r.primaryMuscles ?? [];
+  const images = imageUrls(r.images);
   return {
     exerciseId: r.id,
     name: r.name,
-    gifUrl: imageUrl(r.images),
+    gifUrl: images[0] ?? "",
+    images,
     targetMuscles: primary,
     bodyParts: bodyPartsFor(primary),
     equipments: r.equipment ? [r.equipment] : [],

@@ -152,6 +152,7 @@ class AppStrings extends ChangeNotifier {
       'hu': 'Nincs több gyakorlat',
     },
     'workout.exit': {'en': 'Exit', 'hu': 'Kilépés'},
+    'workout.exercise_fallback': {'en': 'Exercise', 'hu': 'Gyakorlat'},
     'workout.finish_confirm_title': {
       'en': 'Finish workout?',
       'hu': 'Edzés befejezése?',

@@ -7,7 +7,8 @@ import '../services/auth_service.dart';
 import '../services/exercise_api.dart';
 import '../theme/app_theme.dart';
 import '../models/exercise_api_models.dart';
-import '../widgets/exercise_placeholder.dart';
+import '../utils/exercise_labels.dart';
+import '../widgets/exercise_image.dart';
 import 'paywall_screen.dart';
 
 class CreateTrainingScreen extends StatefulWidget {
@@ -457,7 +458,7 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
           }
           final p = _bodyParts[i - 1];
           return _chip(
-            p,
+            exLabel(p),
             _bodyPartFilter == p,
             () => _selectBodyPart(_bodyPartFilter == p ? null : p),
           );
@@ -624,7 +625,7 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
             ),
             child: Row(
               children: [
-                _thumb(ex.gifUrl),
+                _thumb(ex),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -640,10 +641,10 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
                           color: AppColors.onSurface,
                         ),
                       ),
-                      if (ex.muscleSummary.isNotEmpty) ...[
+                      if (ex.targetMuscles.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
-                          _titleCase(ex.muscleSummary),
+                          _titleCase(exLabels(ex.targetMuscles).join(', ')),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -676,25 +677,20 @@ class _CreateTrainingScreenState extends State<CreateTrainingScreen> {
     );
   }
 
-  /// Animated GIF preview for the exercise, with graceful fallbacks.
-  Widget _thumb(String url) {
+  /// Animated 2-frame preview for the exercise, with graceful fallbacks.
+  Widget _thumb(ApiExercise ex) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Container(
         width: 52,
         height: 52,
         color: AppColors.surfaceHigh,
-        child: url.isEmpty
-            ? const ExercisePlaceholder(
-                iconSize: 18, showLabel: true, compact: true)
-            : Image.network(
-                url,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) =>
-                    progress == null ? child : const SizedBox.shrink(),
-                errorBuilder: (_, __, ___) => const ExercisePlaceholder(
-                    iconSize: 18, showLabel: true, compact: true),
-              ),
+        child: ExerciseImage(
+          frames: ex.imageFrames,
+          iconSize: 18,
+          showLabel: true,
+          compact: true,
+        ),
       ),
     );
   }
@@ -760,7 +756,7 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
                   controller: controller,
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                   children: [
-                    _gif(ex.gifUrl),
+                    _gif(ex),
                     const SizedBox(height: 20),
                     Text(
                       _titleCase(ex.name),
@@ -778,11 +774,12 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
                     const SizedBox(height: 16),
                     _toggleButton(selected),
                     const SizedBox(height: 8),
-                    _chipsSection(t('detail.target_muscles'), ex.targetMuscles),
                     _chipsSection(
-                        t('detail.secondary_muscles'), ex.secondaryMuscles),
-                    _chipsSection(t('detail.body_parts'), ex.bodyParts),
-                    _chipsSection(t('detail.equipment'), ex.equipments),
+                        t('detail.target_muscles'), exLabels(ex.targetMuscles)),
+                    _chipsSection(t('detail.secondary_muscles'),
+                        exLabels(ex.secondaryMuscles)),
+                    _chipsSection(t('detail.body_parts'), exLabels(ex.bodyParts)),
+                    _chipsSection(t('detail.equipment'), exLabels(ex.equipments)),
                     _instructions(ex.instructions),
                   ],
                 ),
@@ -794,7 +791,7 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
     );
   }
 
-  Widget _gif(String url) {
+  Widget _gif(ApiExercise ex) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: AspectRatio(
@@ -802,14 +799,12 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
         child: Container(
           color: Colors.white,
           alignment: Alignment.center,
-          child: url.isEmpty
-              ? const ExercisePlaceholder(iconSize: 48, showLabel: true)
-              : Image.network(
-                  url,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) =>
-                      const ExercisePlaceholder(iconSize: 48, showLabel: true),
-                ),
+          child: ExerciseImage(
+            frames: ex.imageFrames,
+            fit: BoxFit.contain,
+            iconSize: 48,
+            showLabel: true,
+          ),
         ),
       ),
     );

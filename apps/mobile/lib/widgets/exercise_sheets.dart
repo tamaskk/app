@@ -3,8 +3,9 @@ import '../theme/app_theme.dart';
 import '../models/exercise_api_models.dart';
 import '../services/exercise_api.dart';
 import '../utils/text.dart';
+import '../utils/exercise_labels.dart';
 import '../i18n/app_strings.dart';
-import 'exercise_placeholder.dart';
+import 'exercise_image.dart';
 
 const _sheetDecoration = BoxDecoration(
   color: AppColors.background,
@@ -114,7 +115,7 @@ class _ExerciseInfoSheetState extends State<_ExerciseInfoSheet> {
       controller: controller,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
-        _gif(ex.gifUrl),
+        _gif(ex),
         const SizedBox(height: 20),
         Text(titleCase(ex.name),
             style: const TextStyle(
@@ -122,28 +123,28 @@ class _ExerciseInfoSheetState extends State<_ExerciseInfoSheet> {
                 fontWeight: FontWeight.w800,
                 letterSpacing: -1,
                 color: AppColors.onSurface)),
-        _chips(t('detail.target_muscles'), ex.targetMuscles),
-        _chips(t('detail.secondary_muscles'), ex.secondaryMuscles),
-        _chips(t('detail.body_parts'), ex.bodyParts),
-        _chips(t('detail.equipment'), ex.equipments),
+        _chips(t('detail.target_muscles'), exLabels(ex.targetMuscles)),
+        _chips(t('detail.secondary_muscles'), exLabels(ex.secondaryMuscles)),
+        _chips(t('detail.body_parts'), exLabels(ex.bodyParts)),
+        _chips(t('detail.equipment'), exLabels(ex.equipments)),
         _instructions(ex.instructions),
       ],
     );
   }
 
-  Widget _gif(String url) => ClipRRect(
+  Widget _gif(ApiExercise ex) => ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: AspectRatio(
           aspectRatio: 1,
           child: Container(
             color: Colors.white,
             alignment: Alignment.center,
-            child: url.isEmpty
-                ? const ExercisePlaceholder(iconSize: 48, showLabel: true)
-                : Image.network(url,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const ExercisePlaceholder(
-                        iconSize: 48, showLabel: true)),
+            child: ExerciseImage(
+              frames: ex.imageFrames,
+              fit: BoxFit.contain,
+              iconSize: 48,
+              showLabel: true,
+            ),
           ),
         ),
       );
@@ -348,7 +349,8 @@ class _ChangeExerciseSheetState extends State<_ChangeExerciseSheet> {
                 () => _selectMuscle(null));
           }
           final m = _muscles[i - 1];
-          return _chip(m, _muscleFilter == m,
+          // Localize the chip label; the filter value stays the English key.
+          return _chip(exLabel(m), _muscleFilter == m,
               () => _selectMuscle(_muscleFilter == m ? null : m));
         },
       ),
@@ -418,18 +420,12 @@ class _ChangeExerciseSheetState extends State<_ChangeExerciseSheet> {
                     width: 52,
                     height: 52,
                     color: AppColors.surfaceHigh,
-                    child: ex.gifUrl.isEmpty
-                        ? const ExercisePlaceholder(
-                            iconSize: 18, showLabel: true, compact: true)
-                        : Image.network(ex.gifUrl,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (c, child, p) =>
-                                p == null ? child : const SizedBox.shrink(),
-                            errorBuilder: (_, __, ___) =>
-                                const ExercisePlaceholder(
-                                    iconSize: 18,
-                                    showLabel: true,
-                                    compact: true)),
+                    child: ExerciseImage(
+                      frames: ex.imageFrames,
+                      iconSize: 18,
+                      showLabel: true,
+                      compact: true,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -444,9 +440,9 @@ class _ChangeExerciseSheetState extends State<_ChangeExerciseSheet> {
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: AppColors.onSurface)),
-                      if (ex.muscleSummary.isNotEmpty) ...[
+                      if (ex.targetMuscles.isNotEmpty) ...[
                         const SizedBox(height: 2),
-                        Text(titleCase(ex.muscleSummary),
+                        Text(titleCase(exLabels(ex.targetMuscles).join(', ')),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(

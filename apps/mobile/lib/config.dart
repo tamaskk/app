@@ -15,10 +15,12 @@ const String apiBaseUrl = String.fromEnvironment(
 /// Base URL of the exercise catalogue API (`$exerciseApiBaseUrl/api/v1/*`).
 ///
 /// Now served by our own backend (apps/web), which sources the free-exercise-db
-/// dataset and returns working image URLs. The previous standalone host
-/// (gym-exercise-api) depended on the ExerciseDB image CDN, which was
-/// decommissioned — every gifUrl 404'd, so no exercise media loaded. Defaults
-/// to [apiBaseUrl] so the catalogue always follows the backend.
+/// dataset (https://github.com/yuhonas/free-exercise-db) and returns working
+/// image URLs. The previous standalone host (gym-exercise-api) depended on the
+/// ExerciseDB image CDN, which was decommissioned — every gifUrl 404'd, so no
+/// exercise media loaded. Defaults to [apiBaseUrl] so the catalogue always
+/// follows the backend. Names/muscles are English keys the app localizes
+/// client-side (see utils/exercise_labels.dart).
 ///
 /// Override at run time with:
 ///   flutter run --dart-define=EXERCISE_API_BASE_URL=http://localhost:3000

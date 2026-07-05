@@ -54,6 +54,7 @@ export default async function SessionsPage() {
       <SimpleTable
         rows={rows}
         deleteEndpoint="/api/sessions"
+        editBase="/sessions"
         columns={[
           { key: "name", label: "Name" },
           { key: "owner", label: "Owner" },

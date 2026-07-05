@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../services/api.dart';
 import '../models/api_models.dart';
 import '../utils/text.dart';
+import '../utils/exercise_labels.dart';
 import '../widgets/rank_up_overlay.dart';
 import '../i18n/app_strings.dart';
 
@@ -206,7 +207,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
         : null;
     final subtitleParts = <String>[];
     if (ex.targetMuscles.isNotEmpty) {
-      subtitleParts.add(titleCase(ex.targetMuscles.first));
+      subtitleParts.add(titleCase(exLabel(ex.targetMuscles.first)));
     }
     subtitleParts.add('${ex.sets.length} set');
 

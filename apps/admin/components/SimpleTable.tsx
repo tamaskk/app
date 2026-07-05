@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type Row = { id: string } & Record<string, string | number>;
@@ -8,12 +9,16 @@ export function SimpleTable({
   rows: initial,
   columns,
   deleteEndpoint,
+  editBase,
 }: {
   rows: Row[];
   columns: { key: string; label: string }[];
   deleteEndpoint?: string;
+  // When set, each row gets an "Edit" link to `${editBase}/${id}`.
+  editBase?: string;
 }) {
   const [rows, setRows] = useState(initial);
+  const hasActions = !!deleteEndpoint || !!editBase;
 
   async function onDelete(id: string) {
     if (!deleteEndpoint) return;
@@ -33,7 +38,7 @@ export function SimpleTable({
                 {c.label}
               </th>
             ))}
-            {deleteEndpoint && <th className="px-4 py-3" />}
+            {hasActions && <th className="px-4 py-3" />}
           </tr>
         </thead>
         <tbody>
@@ -47,15 +52,27 @@ export function SimpleTable({
                   {r[c.key]}
                 </td>
               ))}
-              {deleteEndpoint && (
+              {hasActions && (
                 <td className="px-4 py-3 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onDelete(r.id)}
-                    className="cursor-pointer rounded-md border border-white/15 px-2.5 py-1 text-[11px] font-bold tracking-tight text-white/70 hover:bg-white/[0.05] hover:text-white"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    {editBase && (
+                      <Link
+                        href={`${editBase}/${r.id}`}
+                        className="cursor-pointer rounded-md border border-white/15 px-2.5 py-1 text-[11px] font-bold tracking-tight text-white/70 hover:bg-white/[0.05] hover:text-white"
+                      >
+                        Edit
+                      </Link>
+                    )}
+                    {deleteEndpoint && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(r.id)}
+                        className="cursor-pointer rounded-md border border-white/15 px-2.5 py-1 text-[11px] font-bold tracking-tight text-white/70 hover:bg-white/[0.05] hover:text-white"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               )}
             </tr>
@@ -63,7 +80,7 @@ export function SimpleTable({
           {rows.length === 0 && (
             <tr>
               <td
-                colSpan={columns.length + (deleteEndpoint ? 1 : 0)}
+                colSpan={columns.length + (hasActions ? 1 : 0)}
                 className="px-4 py-10 text-center text-[13px] text-white/40"
               >
                 Nothing here yet.

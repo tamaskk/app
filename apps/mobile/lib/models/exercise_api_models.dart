@@ -11,12 +11,19 @@
 // follow the user's language.
 
 import '../i18n/app_strings.dart';
+import '../utils/exercise_frames.dart';
 
 /// A single exercise from the catalogue (the API's `ExerciseDto`).
 class ApiExercise {
   final String exerciseId;
   final String name;
   final String gifUrl;
+
+  /// Every static frame of the exercise. free-exercise-db ships exactly two
+  /// (`.../0.jpg` and `.../1.jpg`); the UI flips between them every 0.5s to
+  /// fake a GIF. Empty for user-created exercises with a single [gifUrl].
+  final List<String> images;
+
   final List<String> targetMuscles;
   final List<String> bodyParts;
   final List<String> equipments;
@@ -27,6 +34,7 @@ class ApiExercise {
     required this.exerciseId,
     required this.name,
     required this.gifUrl,
+    this.images = const [],
     this.targetMuscles = const [],
     this.bodyParts = const [],
     this.equipments = const [],
@@ -34,10 +42,21 @@ class ApiExercise {
     this.instructions = const [],
   });
 
+  /// Frames to animate: the explicit [images] list when the catalogue supplied
+  /// one, otherwise derived from [gifUrl] (a free-exercise-db `.../0.jpg` URL
+  /// yields its `.../1.jpg` sibling). A single non-catalogue URL stays static.
+  List<String> get imageFrames =>
+      images.isNotEmpty ? images : framesFromUrl(gifUrl);
+
   factory ApiExercise.fromJson(Map<String, dynamic> json) => ApiExercise(
         exerciseId: json['exerciseId']?.toString() ?? '',
         name: _localizedString(json['name']),
         gifUrl: json['gifUrl'] as String? ?? '',
+        images: (json['images'] as List?)
+                ?.map((e) => e?.toString() ?? '')
+                .where((s) => s.isNotEmpty)
+                .toList() ??
+            const [],
         // Muscle / body-part / equipment values are catalogue KEYS that feed
         // back into API filter queries (the backend matches the English
         // ExerciseDB vocabulary). Resolve them to English, NOT the UI language —

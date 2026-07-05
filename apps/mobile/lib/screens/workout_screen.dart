@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../i18n/app_strings.dart';
+import '../utils/exercise_labels.dart';
 import '../models/workout.dart';
 import '../models/exercise_api_models.dart';
 import '../models/api_models.dart';
@@ -12,7 +13,7 @@ import '../services/api.dart';
 import '../services/workout_progress.dart';
 import '../widgets/exercise_sheets.dart';
 import '../widgets/plate_calculator_sheet.dart';
-import '../widgets/exercise_placeholder.dart';
+import '../widgets/exercise_image.dart';
 import '../utils/text.dart';
 import 'workout_summary_screen.dart';
 
@@ -1014,8 +1015,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                       ex.variant.isNotEmpty
                           ? ex.variant
                           : (ex.targetMuscles.isNotEmpty
-                              ? titleCase(ex.targetMuscles.join(', '))
-                              : 'Gyakorlat'),
+                              ? titleCase(exLabels(ex.targetMuscles).join(', '))
+                              : t('workout.exercise_fallback')),
                       style: const TextStyle(
                           fontSize: 15, color: AppColors.muted),
                     ),
@@ -1181,20 +1182,15 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       BoxFit fit = BoxFit.cover,
       bool? showLabel,
       bool compact = false}) {
-    final fallback = Center(
-      child: ExercisePlaceholder(
-        iconSize: iconSize,
-        showLabel: showLabel ?? (iconSize >= 40),
-        compact: compact,
-      ),
-    );
-    if (url.isEmpty) return fallback;
-    return Image.network(
-      url,
+    // Persisted trainings keep only the first frame's URL; ExerciseImage
+    // reconstructs the second from the free-exercise-db naming convention and
+    // flips between them (fake GIF).
+    return ExerciseImage(
+      url: url,
       fit: fit,
-      loadingBuilder: (context, child, progress) =>
-          progress == null ? child : const SizedBox.shrink(),
-      errorBuilder: (_, __, ___) => fallback,
+      iconSize: iconSize,
+      showLabel: showLabel ?? (iconSize >= 40),
+      compact: compact,
     );
   }
 

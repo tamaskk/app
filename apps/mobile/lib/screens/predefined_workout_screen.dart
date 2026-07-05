@@ -8,6 +8,7 @@ import '../models/exercise_api_models.dart';
 import '../data/predefined_workouts.dart';
 import '../i18n/app_strings.dart';
 import '../utils/text.dart';
+import '../widgets/exercise_image.dart';
 import 'paywall_screen.dart';
 
 // Grayscale matrix so cover photos fit the monochrome design.
@@ -268,19 +269,11 @@ class _PredefinedWorkoutScreenState extends State<PredefinedWorkoutScreen> {
               width: 52,
               height: 52,
               color: AppColors.surfaceHigh,
-              child: ex.gifUrl.isEmpty
-                  ? const Icon(Icons.fitness_center,
-                      color: AppColors.muted, size: 22)
-                  : Image.network(
-                      ex.gifUrl,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, progress) =>
-                          progress == null ? child : const SizedBox.shrink(),
-                      errorBuilder: (_, __, ___) => const Icon(
-                          Icons.fitness_center,
-                          color: AppColors.muted,
-                          size: 22),
-                    ),
+              child: ExerciseImage(
+                frames: ex.imageFrames,
+                iconSize: 18,
+                compact: true,
+              ),
             ),
           ),
           const SizedBox(width: 12),
