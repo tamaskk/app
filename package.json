@@ -3,12 +3,14 @@
   "private": true,
   "workspaces": [
     "apps/web",
-    "apps/admin"
+    "apps/admin",
+    "apps/web-app"
   ],
   "scripts": {
     "dev": "turbo dev",
     "dev:app": "turbo dev --filter=web",
     "dev:admin": "turbo dev --filter=admin",
+    "dev:webapp": "turbo dev --filter=web-app",
     "dev:mobile": "cd apps/mobile && flutter run",
     "build": "turbo build",
     "lint": "turbo lint"

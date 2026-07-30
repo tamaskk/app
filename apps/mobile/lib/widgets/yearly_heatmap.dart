@@ -8,8 +8,9 @@ import '../i18n/app_strings.dart';
 ///
 /// Pass in a map of `DateTime(day) → intensity` where intensity is any
 /// non-negative number you choose (volume in kg, sets count, minutes —
-/// whichever metric you want to visualise).
-class YearlyHeatmap extends StatelessWidget {
+/// whichever metric you want to visualise). When [year] is the current year
+/// the grid auto-scrolls to the current week so recent activity is in view.
+class YearlyHeatmap extends StatefulWidget {
   final int year;
   final Map<DateTime, double> dayIntensity;
   final double cellSize;
@@ -19,19 +20,58 @@ class YearlyHeatmap extends StatelessWidget {
     super.key,
     required this.year,
     required this.dayIntensity,
-    this.cellSize = 10,
+    this.cellSize = 12,
     this.cellGap = 3,
   });
 
-  // Bucketed shades, dimmest → brightest. The "off" colour matches
-  // surfaceHigh so empty cells still register as a grid.
+  @override
+  State<YearlyHeatmap> createState() => _YearlyHeatmapState();
+}
+
+class _YearlyHeatmapState extends State<YearlyHeatmap> {
+  final _controller = ScrollController();
+
+  // Bucketed shades, dimmest → brightest. The "off" colour is a touch lighter
+  // than the surrounding card so empty cells still read as a grid (an off cell
+  // matching the card background made the whole heatmap look blank).
   static const _shades = [
-    Color(0xFF1C1B1B), // 0 — no activity
-    Color(0xFF3A3838),
+    Color(0xFF2A2A2A), // 0 — no activity (visible on the surfaceLow card)
+    Color(0xFF454343),
     Color(0xFF6E6C6C),
     Color(0xFFB5B3B3),
     Color(0xFFFFFFFF), // top bucket
   ];
+
+  DateTime get _gridStart {
+    final jan1 = DateTime(widget.year, 1, 1);
+    return jan1.subtract(Duration(days: jan1.weekday - 1));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Jump to the current week on first layout so the newest columns (recent
+    // workouts) are visible instead of an empty January.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToNow());
+  }
+
+  void _scrollToNow() {
+    if (!_controller.hasClients) return;
+    final now = DateTime.now();
+    if (widget.year != now.year) return;
+    final currentWeek = now.difference(_gridStart).inDays ~/ 7;
+    final colWidth = widget.cellSize + widget.cellGap;
+    final viewport = _controller.position.viewportDimension;
+    // Centre the current week in the viewport.
+    final target = (currentWeek + 0.5) * colWidth - viewport / 2;
+    _controller.jumpTo(target.clamp(0.0, _controller.position.maxScrollExtent));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Color _shadeFor(double intensity, double max) {
     if (max <= 0 || intensity <= 0) return _shades[0];
@@ -45,7 +85,7 @@ class YearlyHeatmap extends StatelessWidget {
   List<_MonthLabel> _monthLabels(DateTime jan1) {
     final out = <_MonthLabel>[];
     for (var m = 1; m <= 12; m++) {
-      final first = DateTime(year, m, 1);
+      final first = DateTime(widget.year, m, 1);
       final week = first.difference(jan1).inDays ~/ 7;
       // First letter of the localized short month name — keeps the axis to a
       // single glyph while staying in the active language (EN 'A' for April,
@@ -57,23 +97,27 @@ class YearlyHeatmap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final jan1 = DateTime(year, 1, 1);
+    final year = widget.year;
+    final cellSize = widget.cellSize;
+    final cellGap = widget.cellGap;
     final dec31 = DateTime(year, 12, 31);
+    final gridStart = _gridStart;
     // Grid spans from the Monday before Jan 1 to the Sunday after Dec 31.
-    final gridStart = jan1.subtract(Duration(days: jan1.weekday - 1));
     final gridEnd = dec31.add(Duration(days: 7 - dec31.weekday));
     final totalDays = gridEnd.difference(gridStart).inDays + 1;
     final weeks = totalDays ~/ 7;
 
     final max =
-        dayIntensity.values.fold<double>(0, (a, b) => b > a ? b : a);
+        widget.dayIntensity.values.fold<double>(0, (a, b) => b > a ? b : a);
     final months = _monthLabels(gridStart);
+    final today = DateTime.now();
 
     final colWidth = cellSize + cellGap;
     final rowHeight = cellSize + cellGap;
     final gridWidth = weeks * colWidth;
 
     return SingleChildScrollView(
+      controller: _controller,
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -126,7 +170,10 @@ class YearlyHeatmap extends StatelessWidget {
                       }
                       final key = DateTime(
                           cellDate.year, cellDate.month, cellDate.day);
-                      final intensity = dayIntensity[key] ?? 0;
+                      final intensity = widget.dayIntensity[key] ?? 0;
+                      final isToday = cellDate.year == today.year &&
+                          cellDate.month == today.month &&
+                          cellDate.day == today.day;
                       return Padding(
                         padding: EdgeInsets.only(bottom: cellGap),
                         child: Container(
@@ -135,6 +182,11 @@ class YearlyHeatmap extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: _shadeFor(intensity, max),
                             borderRadius: BorderRadius.circular(2),
+                            // Ring today's cell so "now" is easy to spot.
+                            border: isToday
+                                ? Border.all(
+                                    color: AppColors.onSurface, width: 1)
+                                : null,
                           ),
                         ),
                       );

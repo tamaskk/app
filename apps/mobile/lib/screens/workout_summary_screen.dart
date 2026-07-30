@@ -174,6 +174,8 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                       s.duration != null ? _fmtDur(s.duration!) : '–')),
               Expanded(child: _stat('Sets', '${s.totalSets}')),
               Expanded(child: _stat('Reps', '$_totalReps')),
+              if (s.hasKcal)
+                Expanded(child: _stat('Kcal', '${s.totalKcal.round()}')),
             ],
           ),
           const SizedBox(height: 24),
@@ -210,6 +212,9 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
       subtitleParts.add(titleCase(exLabel(ex.targetMuscles.first)));
     }
     subtitleParts.add('${ex.sets.length} set');
+    if (ex.kcal != null) {
+      subtitleParts.add('${ex.kcal!.round()} kcal');
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),

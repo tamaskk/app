@@ -70,9 +70,18 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   int _bankedElapsed = 0;
   DateTime _sittingStart = DateTime.now();
   bool _exiting = false;
+  bool _estimating = false; // calorie-estimate request in flight
 
   int get _elapsedTotal =>
       _bankedElapsed + DateTime.now().difference(_sittingStart).inSeconds;
+
+  /// The calorie estimate needs every set logged. Gate on reps > 0 for every
+  /// set of every exercise — kg may legitimately be 0 (bodyweight moves).
+  bool get _allSetsFilled =>
+      workout.exercises.isNotEmpty &&
+      workout.exercises.every(
+        (e) => e.sets.isNotEmpty && e.sets.every((s) => s.reps > 0),
+      );
 
   // Auto-progression hints, keyed by exerciseId. Optional overlay — absent for
   // exercises with no history or strategy "none".
@@ -323,6 +332,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                 'metric': e.metric,
                 'stationKey': e.stationKey,
                 'note': e.note,
+                'kcal': e.kcal,
                 'sets': e.sets.map((s) => _setPayload(s, done: true)).toList(),
               })
           .toList();
@@ -1108,6 +1118,16 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
           ),
           const SizedBox(height: 20),
 
+          // AI calorie estimate for the whole workout.
+          _estimateKcalButton(ex),
+          if (!_allSetsFilled) ...[
+            const SizedBox(height: 8),
+            Text(t('workout.kcal_fill_hint'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+          ],
+          const SizedBox(height: 20),
+
           // Watch a how-to on YouTube (search by exercise name).
           GestureDetector(
             onTap: () => _openYoutube(ex),
@@ -1136,6 +1156,96 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  /// Estimate calories burned for the whole workout via the backend (OpenAI),
+  /// then stamp the per-exercise kcal onto every exercise so it persists on the
+  /// logged session and shows in the summary. Gated on [_allSetsFilled].
+  Future<void> _estimateCalories() async {
+    if (_estimating || !_allSetsFilled) return;
+    setState(() => _estimating = true);
+    try {
+      final payload = workout.exercises
+          .map((e) => {
+                'name': e.name,
+                'targetMuscles': e.targetMuscles,
+                'sets': e.sets
+                    .map((s) => {'kg': s.kg, 'reps': s.reps})
+                    .toList(),
+              })
+          .toList();
+      final kcals =
+          await _api.estimateCalories(payload, durationSeconds: _elapsedTotal);
+      if (!mounted) return;
+      setState(() {
+        for (var i = 0;
+            i < workout.exercises.length && i < kcals.length;
+            i++) {
+          workout.exercises[i].kcal = kcals[i];
+        }
+      });
+      final total = kcals.fold<double>(0, (a, b) => a + b);
+      _snack(tFmt('workout.kcal_estimated', {'n': total.round()}));
+    } on ApiException catch (e) {
+      _snack(e.message);
+    } catch (_) {
+      _snack(t('workout.kcal_failed'));
+    } finally {
+      if (mounted) setState(() => _estimating = false);
+    }
+  }
+
+  /// "Estimate calories" pill. Enabled once every set has reps; once run, shows
+  /// this exercise's kcal and stays tappable to re-estimate.
+  Widget _estimateKcalButton(Exercise ex) {
+    final filled = _allSetsFilled;
+    final hasKcal = ex.kcal != null;
+    final enabled = filled && !_estimating;
+    final tint = (enabled || hasKcal) ? AppColors.onSurface : AppColors.muted;
+    return GestureDetector(
+      onTap: enabled ? _estimateCalories : null,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 50,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: hasKcal ? AppColors.surfaceHigh : AppColors.surfaceLow,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: AppColors.outline),
+        ),
+        child: _estimating
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.onSurface),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.local_fire_department_outlined,
+                      color: tint, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    hasKcal
+                        ? tFmt('workout.kcal_value', {'n': ex.kcal!.round()})
+                        : t('workout.estimate_kcal'),
+                    style: TextStyle(
+                        color: tint,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
       ),
     );
   }

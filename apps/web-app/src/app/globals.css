@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ * HEFTOR design tokens — a 1:1 port of apps/mobile/lib/theme/app_theme.dart
+ * (AppColors + the dark ThemeData). Kept as Tailwind v4 @theme tokens so
+ * every colour is reachable as bg, text and border utilities.
+ * ------------------------------------------------------------------ */
+@theme {
+  --color-background: #000000;
+  --color-surface-low: #1c1b1b;
+  --color-surface-mid: #2a2a2a;
+  --color-surface-high: #353434;
+  --color-on-surface: #e5e2e1;
+  --color-muted: #8e8e93;
+  --color-outline: #2c2c2e;
+  --color-primary: #ffffff;
+  --color-accent-green: #34c759;
+  --color-accent-red: #ff3b30;
+  --color-accent-amber: #f5a623;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* The app is a phone canvas: content is capped at 480px on mobile. */
+  --breakpoint-mobile: 480px;
+}
+
+/* Flutter renders on pure black with the Inter type ramp. Mirror the
+ * MaterialApp defaults so unstyled text already matches the app. */
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide scrollbars on the horizontal story/chip strips, matching the
+ * app's edge-to-edge scroll surfaces (no visible track). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Number inputs in set rows: strip the spinner so they read like the
+ * app's bare numeric fields. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+@keyframes heftor-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+.skeleton {
+  background: var(--color-surface-mid);
+  animation: heftor-pulse 1.3s ease-in-out infinite;
+}
+
+@keyframes heftor-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: heftor-fade-in 0.25s ease-out;
+}

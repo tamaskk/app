@@ -12,8 +12,11 @@ import '../utils/text.dart';
 import '../models/rank.dart';
 import '../widgets/training_actions.dart';
 import '../widgets/week_preview.dart';
+import '../widgets/skeleton.dart';
 import 'weekly_plan_edit_screen.dart';
 import 'create_training_screen.dart';
+import 'training_generator_screen.dart';
+import 'log_run_screen.dart';
 import 'account_screen.dart';
 import 'workout_screen.dart';
 import '../i18n/app_strings.dart';
@@ -59,11 +62,15 @@ String _fmtTime(int minutes) =>
 class DashboardScreen extends StatefulWidget {
   final AuthService auth;
   final VoidCallback onLogout;
+  // Switch the bottom-nav tab (0 home, 1 trainings, 2 hyrox, 3 progress,
+  // 4 calendar) — used by the home quick-action buttons.
+  final ValueChanged<int>? onNavigateTab;
 
   const DashboardScreen({
     super.key,
     required this.auth,
     required this.onLogout,
+    this.onNavigateTab,
   });
 
   @override
@@ -83,11 +90,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Live data.
   List<WorkoutSession> _sessions = [];
   List<SavedTraining> _trainings = [];
+  // Resumable trainings not in [_trainings] (HYROX plans are fetched
+  // separately) so a started HYROX workout still gets a continue card.
+  List<SavedTraining> _resumableExtra = [];
   int _streak = 0;
   Set<int> _workoutDays = {};
   List<StagnationItem> _stagnating = [];
   // In-progress (continuable) workouts, keyed by training id.
   Map<String, WorkoutProgress> _inProgress = {};
+  // True until the first data load finishes — drives the loading skeletons.
+  bool _loading = true;
 
   // Most-recent list under the hero shows at most this many items.
   static const _recentLimit = 5;
@@ -121,6 +133,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       inProgress = await WorkoutProgressStore.all();
     } catch (_) {}
+    // Resolve any in-progress workout hidden from the default list (a started
+    // HYROX workout) so it still surfaces as continuable.
+    final resumableExtra = await _fetchResumableExtra(trainings, inProgress);
     if (!mounted) return;
     final dates = sessions
         .map((s) => s.finishedAt ?? s.startedAt)
@@ -130,10 +145,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _sessions = sessions;
       _trainings = trainings;
+      _resumableExtra = resumableExtra;
       _streak = streak;
       _workoutDays = dates.map(_dayKey).toSet();
       _stagnating = stagnating;
       _inProgress = inProgress;
+      _loading = false;
     });
     // Mirror the streak + this month's training days + weekly goal progress
     // onto the iOS home-screen widgets (best-effort).
@@ -197,7 +214,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Workout _toWorkout(SavedTraining t, int index) => Workout(
         id: t.id,
         name: t.name,
-        number: index + 1,
+        // Resumable HYROX trainings aren't in [_trainings] (index -1) — clamp.
+        number: (index < 0 ? 0 : index) + 1,
         durationMinutes: 0,
         exercises: t.exercises
             .map((e) => Exercise(
@@ -207,9 +225,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   gifUrl: e.gifUrl,
                   targetMuscles: e.targetMuscles,
                   progressionStrategy: e.progressionStrategy,
+                  // Carry HYROX metric fields so a resumed station renders as
+                  // distance/time/load, not a plain kg×reps set.
+                  metric: e.metric,
+                  stationKey: e.stationKey,
+                  note: e.note,
                   sets: e.sets
-                      .map((s) =>
-                          WorkoutSet(kg: s.kg, reps: s.reps, done: s.done))
+                      .map((s) => WorkoutSet(
+                            kg: s.kg,
+                            reps: s.reps,
+                            done: s.done,
+                            distanceM: s.distanceM,
+                            seconds: s.seconds,
+                            targetKg: s.targetKg,
+                          ))
                       .toList(),
                 ))
             .toList(),
@@ -220,6 +249,128 @@ class _DashboardScreenState extends State<DashboardScreen> {
       MaterialPageRoute(builder: (_) => WorkoutScreen(workout: _toWorkout(t, index))),
     );
     if (mounted) _loadData(); // reflect any logged session
+  }
+
+  Future<void> _openCreate() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => CreateTrainingScreen(auth: widget.auth)),
+    );
+    if (created == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t('dashboard.workout_saved'))),
+      );
+      _loadData();
+    }
+  }
+
+  Future<void> _openGenerator() async {
+    final ok = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+          builder: (_) => TrainingGeneratorScreen(auth: widget.auth)),
+    );
+    if (ok == true && mounted) _loadData();
+  }
+
+  Future<void> _openLogRun() async {
+    final logged = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const LogRunScreen()),
+    );
+    if (logged == true && mounted) _loadData();
+  }
+
+  /// Quick-action grid shown on the home screen in place of the old
+  /// arbitrary "today's workout" hero: create, generate, browse, progress.
+  Widget _quickActions() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            _quickTile(Icons.add, t('quick.new_workout'), _openCreate),
+            const SizedBox(width: 12),
+            _quickTile(
+                Icons.auto_awesome, t('quick.generate'), _openGenerator),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _quickTile(Icons.fitness_center, t('quick.trainings'),
+                () => widget.onNavigateTab?.call(1)),
+            const SizedBox(width: 12),
+            _quickTile(Icons.trending_up, t('quick.progress'),
+                () => widget.onNavigateTab?.call(3)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _quickTile(
+                Icons.directions_run, t('quick.log_run'), _openLogRun),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _quickTile(IconData icon, String label, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLow,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.onSurface, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Slim weekly-goal progress bar (kept from the old hero) — week-level, not
+  /// tied to the selected day.
+  Widget _weeklyProgressBar(double progress, String label) {
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(100),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: AppColors.surfaceHigh,
+              valueColor:
+                  const AlwaysStoppedAnimation(AppColors.onSurface),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(label,
+            style: const TextStyle(
+                color: AppColors.muted,
+                fontSize: 13,
+                fontWeight: FontWeight.w600)),
+      ],
+    );
   }
 
   /// Re-open a logged workout and continue exactly where it stopped: rebuilds
@@ -276,14 +427,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _startedTrainings() {
     final out =
         <({SavedTraining training, WorkoutProgress progress, int index})>[];
-    for (var i = 0; i < _trainings.length; i++) {
-      final p = _inProgress[_trainings[i].id];
+    final all = [..._trainings, ..._resumableExtra];
+    for (var i = 0; i < all.length; i++) {
+      final p = _inProgress[all[i].id];
       if (p != null && p.hasProgress) {
-        out.add((training: _trainings[i], progress: p, index: i));
+        out.add((training: all[i], progress: p, index: i));
       }
     }
     out.sort((a, b) => b.progress.updatedAt.compareTo(a.progress.updatedAt));
     return out;
+  }
+
+  /// Fetch trainings for in-progress workouts missing from [visible] (HYROX
+  /// plans are excluded by default). Network only when there's an unmatched
+  /// in-progress workout; returns just the matching ones.
+  Future<List<SavedTraining>> _fetchResumableExtra(
+    List<SavedTraining> visible,
+    Map<String, WorkoutProgress> inProgress,
+  ) async {
+    final knownIds = visible.map((t) => t.id).toSet();
+    final wanted = inProgress.entries
+        .where((e) => e.value.hasProgress && !knownIds.contains(e.key))
+        .map((e) => e.key)
+        .toSet();
+    if (wanted.isEmpty) return const [];
+    try {
+      final hyrox = await _api.getTrainings(discipline: 'hyrox');
+      return hyrox.where((t) => wanted.contains(t.id)).toList();
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Completed sessions, most recent first.
@@ -355,14 +528,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         leadingWidth: 150,
         leading: Padding(
           padding: const EdgeInsets.only(left: 16),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _streakChip(),
-              const SizedBox(width: 6),
-              _rankChip(context),
-            ],
-          ),
+          child: _loading
+              ? const Shimmer(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Skeleton(width: 52, height: 26, radius: 100),
+                      SizedBox(width: 6),
+                      Skeleton(width: 52, height: 26, radius: 100),
+                    ],
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _streakChip(),
+                    const SizedBox(width: 6),
+                    _rankChip(context),
+                  ],
+                ),
         ),
         title: const Text('HEFTOR'),
         actions: [
@@ -400,7 +584,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
+      body: _loading
+          ? const _DashboardSkeleton()
+          : RefreshIndicator(
         onRefresh: _loadData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -413,6 +599,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _weekStrip(),
               _recentPrBanner(),
               _stagnationBanner(),
+              const SizedBox(height: 24),
+              _quickActions(),
               const SizedBox(height: 24),
               GestureDetector(
                 onHorizontalDragEnd: (details) {
@@ -624,26 +812,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final kgLabel = pr.kg == pr.kg.roundToDouble()
         ? pr.kg.toStringAsFixed(0)
         : pr.kg.toStringAsFixed(1).replaceAll('.', ',');
-    final label =
-        '${t('dashboard.new_pr')} · ${titleCase(pr.exerciseName).toUpperCase()} · $kgLabel × ${pr.reps} · ${relativeDayLabel(pr.when)}';
+    // Muted variant of the dark-on-white text for the tag + value lines.
+    const subColor = Color(0xFF6B6B6B);
     return Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.onSurface,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.background,
-            fontSize: 12,
-            letterSpacing: 1.4,
-            fontWeight: FontWeight.w800,
+      child: GestureDetector(
+        onTap: () => widget.onNavigateTab?.call(3), // → Progress tab
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.onSurface,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.emoji_events,
+                  size: 22, color: AppColors.background),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t('dashboard.new_pr'),
+                      style: const TextStyle(
+                        color: subColor,
+                        fontSize: 10,
+                        letterSpacing: 1.4,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    // Full exercise name — wraps instead of truncating so the
+                    // record is actually readable.
+                    Text(
+                      titleCase(pr.exerciseName),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.background,
+                        fontSize: 15,
+                        height: 1.15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$kgLabel kg × ${pr.reps} · ${relativeDayLabel(pr.when)}',
+                      style: const TextStyle(
+                        color: subColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right,
+                  size: 18, color: subColor),
+            ],
           ),
         ),
       ),
@@ -815,32 +1044,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isPast = DateTime(selectedDay.year, selectedDay.month, selectedDay.day)
         .isBefore(DateTime(todayDate.year, todayDate.month, todayDate.day));
     if (!isPast && _trainings.isNotEmpty) {
-      final first = _trainings.first;
-      // Below the hero: continuable workouts first, then recent done ones.
+      // The old arbitrary "first training as today's workout" hero + KEZDÉS
+      // pill is gone (quick actions replace it). Keep the week-goal progress
+      // and the continue/recent list — those are the useful bits.
       final recent = _recentList();
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _HeroCard(
-            label:
-                '$dateLabel • ${first.exercises.length} ${t('dashboard.exercises_short_caps')}',
-            title: titleCase(first.name.isEmpty ? t('dashboard.workout_default') : first.name),
-            bigNumber: first.exercises.length,
-            progress: progress,
-            progressLabel: weeklyLabel,
-            onTap: () => _startTraining(first, 0),
-            onLongPress: () =>
-                showTrainingActions(context, first, onChanged: _loadData),
-          ),
-          // Today-only explicit CTA: the hero card is already tappable but
-          // a dedicated pill makes the primary action unmistakable. On past/
-          // future days the pill is hidden — the hero is read-only context.
-          if (isToday) ...[
-            const SizedBox(height: 16),
-            _StartPill(onTap: () => _startTraining(first, 0)),
-          ],
+          _weeklyProgressBar(progress, weeklyLabel),
           if (recent.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             ...recent,
           ],
         ],
@@ -1092,26 +1305,17 @@ class _HeroCard extends StatelessWidget {
   final int bigNumber;
   final double progress;
   final String progressLabel;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-
   const _HeroCard({
     required this.label,
     required this.title,
     required this.bigNumber,
     required this.progress,
     required this.progressLabel,
-    this.onTap,
-    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
+    return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1166,8 +1370,7 @@ class _HeroCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -1268,41 +1471,6 @@ class _ListCard extends StatelessWidget {
   }
 }
 
-class _StartPill extends StatelessWidget {
-  final VoidCallback onTap;
-  const _StartPill({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.background,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(100)),
-        ),
-        onPressed: onTap,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(t('dashboard.start_short'),
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                )),
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _StatCard extends StatelessWidget {
   final String value;
   final String label;
@@ -1339,6 +1507,74 @@ class _StatCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
       ],
+    );
+  }
+}
+
+/// Shimmering placeholder shown while the dashboard's first data load is in
+/// flight. Mirrors the real layout: greeting, week strip, day/hero card, plan
+/// list and the stats row.
+class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Greeting block.
+            const Skeleton(width: 70, height: 14),
+            const SizedBox(height: 10),
+            const Skeleton(width: 190, height: 32, radius: 10),
+            const SizedBox(height: 10),
+            const Skeleton(width: 150, height: 12),
+            const SizedBox(height: 28),
+            // Week strip — 7 day circles.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(
+                7,
+                (_) => Column(
+                  children: const [
+                    Skeleton(width: 22, height: 10),
+                    SizedBox(height: 8),
+                    Skeleton(width: 40, height: 40, radius: 100),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            // Day / hero card.
+            const Skeleton(width: double.infinity, height: 190, radius: 24),
+            const SizedBox(height: 24),
+            // Plan list.
+            const Skeleton(width: 130, height: 14),
+            const SizedBox(height: 14),
+            ...List.generate(
+              3,
+              (_) => const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Skeleton(width: double.infinity, height: 74, radius: 18),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Stats row.
+            Row(
+              children: const [
+                Expanded(child: Skeleton(height: 84, radius: 18)),
+                SizedBox(width: 12),
+                Expanded(child: Skeleton(height: 84, radius: 18)),
+                SizedBox(width: 12),
+                Expanded(child: Skeleton(height: 84, radius: 18)),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -111,6 +111,21 @@ class AppStrings extends ChangeNotifier {
     'workout.col_pace': {'en': 'PACE', 'hu': 'TEMPÓ'},
     'workout.col_reps': {'en': 'REPS', 'hu': 'ISM'},
     'workout.col_time': {'en': 'TIME', 'hu': 'IDŐ'},
+    // Calorie estimate (OpenAI-backed).
+    'workout.estimate_kcal': {'en': 'Estimate calories', 'hu': 'Kalória becslése'},
+    'workout.kcal_value': {'en': '≈ {n} kcal', 'hu': '≈ {n} kcal'},
+    'workout.kcal_estimated': {
+      'en': '≈ {n} kcal burned',
+      'hu': '≈ {n} kcal elégetve',
+    },
+    'workout.kcal_failed': {
+      'en': 'Calorie estimate failed',
+      'hu': 'Kalóriabecslés sikertelen',
+    },
+    'workout.kcal_fill_hint': {
+      'en': 'Fill in reps for every set to estimate calories',
+      'hu': 'Töltsd ki minden sorozat ismétlését a becsléshez',
+    },
     // Workout / exercise action menus.
     'workout.menu_finish': {'en': 'Finish workout', 'hu': 'Edzés befejezése'},
     'workout.menu_pause': {
@@ -435,6 +450,30 @@ class AppStrings extends ChangeNotifier {
     'dashboard.stat_active_time': {'en': 'Active time', 'hu': 'Aktív idő'},
     'dashboard.stat_sessions': {'en': 'Sessions', 'hu': 'Edzések'},
     'dashboard.new_pr': {'en': 'NEW PR', 'hu': 'ÚJ REKORD'},
+    // Home quick-action buttons.
+    'quick.new_workout': {'en': 'New workout', 'hu': 'Új edzés'},
+    'quick.generate': {'en': 'Generate', 'hu': 'Generálás'},
+    'quick.trainings': {'en': 'My workouts', 'hu': 'Edzéseim'},
+    'quick.progress': {'en': 'Progress', 'hu': 'Haladás'},
+    'quick.log_run': {'en': 'Log a run', 'hu': 'Futás naplózása'},
+    // --- run logging ---
+    'run.title': {'en': 'Log a run', 'hu': 'Futás naplózása'},
+    'run.subtitle': {
+      'en': 'Enter the distance and time.',
+      'hu': 'Add meg a távot és az időt.',
+    },
+    'run.distance': {'en': 'DISTANCE (KM)', 'hu': 'TÁV (KM)'},
+    'run.time': {'en': 'TIME', 'hu': 'IDŐ'},
+    'run.min': {'en': 'min', 'hu': 'perc'},
+    'run.sec': {'en': 'sec', 'hu': 'mp'},
+    'run.date': {'en': 'DATE', 'hu': 'DÁTUM'},
+    'run.pace': {'en': 'PACE', 'hu': 'TEMPÓ'},
+    'run.name': {'en': 'Run', 'hu': 'Futás'},
+    'run.need': {
+      'en': 'Enter a distance or time.',
+      'hu': 'Adj meg távot vagy időt.',
+    },
+    'run.failed': {'en': "Couldn't save.", 'hu': 'Nem sikerült menteni.'},
     'dashboard.stagnation_label': {
       'en': '{n} EXERCISES STAGNATING · VIEW',
       'hu': '{n} GYAKORLAT STAGNÁL · NÉZD MEG',

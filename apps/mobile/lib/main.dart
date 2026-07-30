@@ -286,7 +286,10 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final screens = [
-      DashboardScreen(auth: widget.auth, onLogout: widget.onLogout),
+      DashboardScreen(
+          auth: widget.auth,
+          onLogout: widget.onLogout,
+          onNavigateTab: _select),
       TrainingsListScreen(auth: widget.auth),
       HyroxScreen(auth: widget.auth),
       const ProgressScreen(),

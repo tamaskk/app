@@ -135,6 +135,8 @@ class SavedExercise {
   final String? metric;
   final String? stationKey;
   final String? note;
+  // AI-estimated calories burned for this exercise (kcal); null if never run.
+  final double? kcal;
   final List<SavedSet> sets;
 
   SavedExercise({
@@ -147,6 +149,7 @@ class SavedExercise {
     this.metric,
     this.stationKey,
     this.note,
+    this.kcal,
     required this.sets,
   });
 
@@ -161,6 +164,7 @@ class SavedExercise {
         metric: json['metric'] as String?,
         stationKey: json['stationKey'] as String?,
         note: json['note'] as String?,
+        kcal: (json['kcal'] as num?)?.toDouble(),
         sets: ((json['sets'] as List?) ?? [])
             .map((e) => SavedSet.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -170,6 +174,9 @@ class SavedExercise {
 /// A completed workout: when it ran and exactly what was logged.
 class WorkoutSession {
   final String id;
+  // Source training id — lets the trainings list match a session back to its
+  // card reliably (name matching breaks on renames / duplicate names).
+  final String? trainingId;
   final String name;
   final DateTime? startedAt;
   final DateTime? finishedAt;
@@ -177,6 +184,7 @@ class WorkoutSession {
 
   WorkoutSession({
     required this.id,
+    this.trainingId,
     required this.name,
     required this.startedAt,
     required this.finishedAt,
@@ -185,6 +193,7 @@ class WorkoutSession {
 
   factory WorkoutSession.fromJson(Map<String, dynamic> json) => WorkoutSession(
         id: json['_id']?.toString() ?? '',
+        trainingId: json['trainingId']?.toString(),
         name: json['name'] as String? ?? '',
         startedAt: _parseDate(json['startedAt']),
         finishedAt: _parseDate(json['finishedAt']),
@@ -199,6 +208,11 @@ class WorkoutSession {
   Duration? get duration => (startedAt != null && finishedAt != null)
       ? finishedAt!.difference(startedAt!)
       : null;
+
+  /// Total AI-estimated calories across all exercises (0 if none estimated).
+  double get totalKcal =>
+      exercises.fold(0.0, (a, e) => a + (e.kcal ?? 0));
+  bool get hasKcal => exercises.any((e) => e.kcal != null);
 }
 
 DateTime? _parseDate(dynamic v) =>

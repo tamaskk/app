@@ -281,6 +281,40 @@ class Api {
     );
   }
 
+  /// Estimate calories burned per exercise via the backend's OpenAI-backed
+  /// endpoint. [exercises] uses the same shape as the session payload
+  /// (`name`, `targetMuscles`, `sets:[{kg,reps}]`). Returns kcal per exercise
+  /// aligned to the input order. Throws [ApiException] on failure (401 → not
+  /// signed in, 400 → sets not filled, 503 → not configured on the server).
+  Future<List<double>> estimateCalories(
+    List<Map<String, dynamic>> exercises, {
+    int? durationSeconds,
+  }) async {
+    final token = await _authToken();
+    final res = await _client.post(
+      _uri('/api/calories'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'exercises': exercises,
+        if (durationSeconds != null) 'durationSeconds': durationSeconds,
+      }),
+    );
+    final body = res.body.isEmpty ? null : jsonDecode(res.body);
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final detail = body is Map ? body['detail']?.toString() : null;
+      throw ApiException(
+          res.statusCode, detail ?? 'Failed to estimate calories');
+    }
+    final map = body as Map<String, dynamic>;
+    final per = (map['perExercise'] as List?) ?? const [];
+    return per
+        .map((e) => ((e as Map)['kcal'] as num?)?.toDouble() ?? 0.0)
+        .toList();
+  }
+
   /// Create the full 12-week HYROX plan in one call (36 trainings under a
   /// shared planId). Returns the new planId + how many were created.
   ///

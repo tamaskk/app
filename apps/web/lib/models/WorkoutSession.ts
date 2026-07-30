@@ -27,6 +27,9 @@ const SessionExerciseSchema = new Schema(
     metric: { type: String, default: null },
     stationKey: { type: String, default: null },
     sets: { type: [SetSchema], default: [] },
+    // AI-estimated calories burned for this exercise (kcal). null → never
+    // estimated. Summed in the summary for the whole-session total.
+    kcal: { type: Number, default: null },
   },
   { _id: false },
 );

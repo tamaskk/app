@@ -27,6 +27,9 @@ export type IncomingExercise = {
   note?: string | null;
   restSeconds?: number | null;
   zone?: string | null;
+  // AI-estimated calories burned for this exercise (kcal). Passed through on
+  // session save so the summary can show per-exercise + total.
+  kcal?: number | null;
   sets?: IncomingSet[];
 };
 
@@ -61,6 +64,7 @@ export function mapExercises(input: IncomingExercise[] | undefined) {
       note: typeof e.note === "string" ? e.note : null,
       restSeconds: numOrNull(e.restSeconds),
       zone: typeof e.zone === "string" ? e.zone : null,
+      kcal: numOrNull(e.kcal),
       sets: (e.sets ?? []).map((s) => ({
         kg: s.kg ?? 0,
         reps: s.reps ?? 0,

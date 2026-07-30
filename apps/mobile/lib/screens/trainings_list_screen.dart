@@ -36,6 +36,9 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
   bool _loading = true;
   String? _error;
   List<SavedTraining> _trainings = [];
+  // Resumable trainings that are hidden from this list (HYROX plans live in
+  // their own tab) but still need a "continue" card. Fetched on demand.
+  List<SavedTraining> _resumableExtra = [];
   List<WorkoutSession> _sessions = [];
   // In-progress workouts the user backed out of, keyed by training id.
   Map<String, WorkoutProgress> _inProgress = {};
@@ -97,9 +100,14 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
       try {
         inProgress = await WorkoutProgressStore.all();
       } catch (_) {}
+      // Any in-progress workout whose training isn't in this (hyrox-excluded)
+      // list — e.g. a started HYROX workout — still needs a continue card.
+      // Pull just those trainings from the hyrox plan.
+      final extra = await _fetchResumableExtra(trainings, inProgress);
       if (mounted) {
         setState(() {
           _trainings = trainings;
+          _resumableExtra = extra;
           _sessions = sessions;
           _inProgress = inProgress;
         });
@@ -160,7 +168,8 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
   Workout _toWorkout(SavedTraining t, int index) => Workout(
         id: t.id,
         name: t.name,
-        number: index + 1,
+        // Resumable HYROX trainings aren't in [_trainings] (index -1) — clamp.
+        number: (index < 0 ? 0 : index) + 1,
         durationMinutes: 0,
         exercises: t.exercises
             .map((e) => Exercise(
@@ -189,9 +198,31 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
 
   // --- derived buckets ------------------------------------------------------
 
+  /// Fetch trainings for in-progress workouts that aren't in [visible] (HYROX
+  /// plans are excluded from the main list). Only hits the network when there's
+  /// an unmatched in-progress workout, and returns just the matching ones.
+  Future<List<SavedTraining>> _fetchResumableExtra(
+    List<SavedTraining> visible,
+    Map<String, WorkoutProgress> inProgress,
+  ) async {
+    final knownIds = visible.map((t) => t.id).toSet();
+    final wanted = inProgress.entries
+        .where((e) => e.value.hasProgress && !knownIds.contains(e.key))
+        .map((e) => e.key)
+        .toSet();
+    if (wanted.isEmpty) return const [];
+    try {
+      final hyrox = await _api.getTrainings(discipline: 'hyrox');
+      return hyrox.where((t) => wanted.contains(t.id)).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
   /// Saved trainings that have a continuable in-progress workout, newest first.
+  /// Includes hidden (HYROX) trainings resolved via [_resumableExtra].
   List<SavedTraining> get _resumableTrainings {
-    final out = _trainings
+    final out = [..._trainings, ..._resumableExtra]
         .where((t) => (_inProgress[t.id]?.hasProgress ?? false))
         .toList();
     out.sort((a, b) => _inProgress[b.id]!
@@ -212,10 +243,19 @@ class _TrainingsListScreenState extends State<TrainingsListScreen> {
   List<SavedTraining> get _manualTrainings =>
       _trainings.where((t) => !t.isGenerated).toList();
 
+  /// Most recent time this training was completed. Combines the server-stamped
+  /// `doneAt` (set on finish) with the session log, matching sessions by
+  /// trainingId first and falling back to a name match for older sessions that
+  /// predate trainingId being logged.
   DateTime? _lastPerformedFor(SavedTraining t) {
-    DateTime? best;
+    DateTime? best = t.doneAt;
+    final wantName = t.name.trim().toLowerCase();
     for (final s in _sessions) {
-      if (s.name.trim().toLowerCase() != t.name.trim().toLowerCase()) continue;
+      final byId = s.trainingId != null && s.trainingId == t.id;
+      final byName = s.trainingId == null &&
+          wantName.isNotEmpty &&
+          s.name.trim().toLowerCase() == wantName;
+      if (!byId && !byName) continue;
       final when = s.finishedAt ?? s.startedAt;
       if (when == null) continue;
       if (best == null || when.isAfter(best)) best = when;

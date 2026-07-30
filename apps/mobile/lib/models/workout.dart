@@ -36,6 +36,10 @@ class Exercise {
   final String? stationKey;
   // Coaching cue / target note from the plan ("~70% 1RM", "céltempó").
   final String? note;
+  // AI-estimated calories burned for this exercise (kcal), set by the
+  // "Estimate calories" action. null → not yet estimated. Persisted on the
+  // logged session so the summary can show per-exercise + total.
+  double? kcal;
 
   Exercise({
     required this.name,
@@ -48,6 +52,7 @@ class Exercise {
     this.metric,
     this.stationKey,
     this.note,
+    this.kcal,
   });
 
   /// True when this is a HYROX station (not classic kg×reps strength).
